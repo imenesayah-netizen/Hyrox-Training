@@ -1,659 +1,522 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Mixed HYROX – 4-Week Training Program</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="HYROX Log"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>HYROX Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #0a0a0a; --surface: #121212; --card: #1a1a1a; --border: #2a2a2a;
-    --accent: #e8ff3b; --accent2: #ff4c3b; --text: #f0f0f0; --muted: #666;
-    --run: #3baaff; --strength: #ff7c3b; --circuit: #c97dff;
-    --station: #e8ff3b; --recovery: #3bff9c;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; font-weight: 300; min-height: 100vh; overflow-x: hidden; }
-
-  header { padding: 48px 40px 32px; border-bottom: 1px solid var(--border); position: relative; overflow: hidden; }
-  header::before { content: 'HYROX'; position: absolute; right: -20px; top: -20px; font-family: 'Barlow Condensed', sans-serif; font-size: 200px; font-weight: 900; color: #ffffff04; pointer-events: none; line-height: 1; letter-spacing: -10px; }
-  .header-tag { display: inline-block; background: var(--accent); color: #000; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 11px; letter-spacing: 3px; padding: 4px 12px; margin-bottom: 16px; }
-  header h1 { font-family: 'Barlow Condensed', sans-serif; font-size: clamp(42px, 8vw, 88px); font-weight: 900; line-height: 0.9; letter-spacing: -2px; text-transform: uppercase; margin-bottom: 16px; }
-  header h1 span { color: var(--accent); }
-  .header-meta { display: flex; gap: 32px; flex-wrap: wrap; margin-top: 24px; }
-  .meta-item { display: flex; flex-direction: column; gap: 2px; }
-  .meta-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-  .meta-value { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 700; color: var(--accent); }
-
-  .structure-banner { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); overflow-x: auto; }
-  .sp { padding: 13px 18px; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 500; border-right: 1px solid var(--border); white-space: nowrap; }
-  .sp:last-child { border-right: none; }
-  .sp-run { color: var(--run); } .sp-sc { color: var(--circuit); } .sp-station { color: var(--station); } .sp-opt { color: #444; font-style: italic; }
-
-  .legend { display: flex; gap: 20px; flex-wrap: wrap; padding: 14px 40px; border-bottom: 1px solid var(--border); }
-  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
-
-  .week-nav { display: flex; padding: 0 40px; border-bottom: 1px solid var(--border); overflow-x: auto; }
-  .week-btn { padding: 16px 28px; background: none; border: none; border-bottom: 3px solid transparent; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-  .week-btn:hover { color: var(--text); }
-  .week-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .week-btn .wf { display: block; font-family: 'Barlow', sans-serif; font-weight: 300; font-size: 10px; letter-spacing: 1px; color: var(--muted); margin-top: 2px; }
-  .week-btn.active .wf { color: var(--accent); opacity: 0.7; }
-
-  .content { padding: 32px 40px; }
-  .week-panel { display: none; }
-  .week-panel.active { display: block; }
-
-  .week-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
-  .week-title { font-family: 'Barlow Condensed', sans-serif; font-size: 36px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; }
-  .week-title span { color: var(--accent); }
-  .week-desc { font-size: 14px; color: var(--muted); max-width: 520px; line-height: 1.6; margin-top: 4px; }
-  .vol-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; font-family: 'Barlow Condensed', sans-serif; }
-  .vol-value { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 700; color: var(--accent2); }
-
-  .days-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 16px; }
-
-  .day-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; transition: border-color 0.2s; }
-  .day-card:hover { border-color: #444; }
-  .day-card.optional { border-style: dashed; border-color: #2e2e2e; }
-
-  .day-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border); }
-  .day-name { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-  .day-type { font-size: 10px; letter-spacing: 2px; font-weight: 500; text-transform: uppercase; padding: 3px 10px; border-radius: 2px; }
-  .type-run { background: rgba(59,170,255,0.15); color: var(--run); }
-  .type-sc { background: rgba(201,125,255,0.15); color: var(--circuit); }
-  .type-station { background: rgba(232,255,59,0.15); color: var(--station); }
-  .type-full { background: rgba(255,76,59,0.15); color: var(--accent2); }
-  .type-recovery { background: rgba(59,255,156,0.15); color: var(--recovery); }
-  .type-rest { background: rgba(100,100,100,0.12); color: var(--muted); }
-  .type-opt { background: rgba(80,80,80,0.1); color: #555; }
-
-  .opt-label { font-size: 9px; letter-spacing: 2px; color: #444; text-transform: uppercase; padding: 0 18px 8px; font-style: italic; }
-
-  .day-body { padding: 16px 18px; }
-  .session-block { margin-bottom: 14px; }
-  .session-block:last-child { margin-bottom: 0; }
-  .block-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
-
-  ul.ex { list-style: none; }
-  ul.ex li { display: flex; align-items: baseline; gap: 10px; font-size: 13px; line-height: 1.7; color: #ccc; border-bottom: 1px solid #1e1e1e; padding: 3px 0; }
-  ul.ex li:last-child { border-bottom: none; }
-  .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
-  .xn { flex: 1; }
-  .xd { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 13px; color: var(--text); white-space: nowrap; }
-
-  .note { margin-top: 12px; padding: 10px 12px; background: rgba(255,255,255,0.03); border-left: 2px solid var(--accent); font-size: 11px; color: var(--muted); line-height: 1.6; }
-  .note-r { border-left-color: var(--run); }
-  .note-p { border-left-color: var(--circuit); }
-  .note-s { border-left-color: var(--station); }
-  .note-o { border-left-color: #333; }
-
-  .rest-body { display: flex; align-items: center; justify-content: center; padding: 32px; color: var(--muted); font-size: 13px; text-align: center; line-height: 1.8; }
-
-  .program-notes { margin-top: 40px; padding: 28px 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; }
-  .notes-title { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
-  .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-  .ni-title { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  .ni-text { font-size: 13px; color: #ccc; line-height: 1.6; }
-
-  @media (max-width: 600px) {
-    header, .legend, .week-nav, .content, .structure-banner { padding-left: 20px; padding-right: 20px; }
-    .days-grid { grid-template-columns: 1fr; }
-  }
+:root{--bg:#0a0a0a;--sur:#111;--card:#181818;--card2:#212121;--b1:#252525;--b2:#303030;--acc:#e8ff3b;--red:#ff4c3b;--text:#f0f0f0;--mu:#555;--mu2:#888;--run:#3baaff;--str:#ff7c3b;--cir:#c97dff;--sta:#e8ff3b;--grn:#3bff9c;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-weight:300;display:flex;flex-direction:column;}
+.topbar{background:var(--sur);border-bottom:1px solid var(--b1);padding:calc(var(--st) + 10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.tb-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;text-transform:uppercase;}
+.tb-title span{color:var(--acc);}
+.wk-pill{display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--b2);border-radius:20px;padding:5px 12px;}
+.wk-pill select{background:none;border:none;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;appearance:none;-webkit-appearance:none;}
+.wk-pill select:focus{outline:none;}
+.dtabs{display:flex;overflow-x:auto;background:var(--sur);border-bottom:1px solid var(--b1);scrollbar-width:none;flex-shrink:0;}
+.dtabs::-webkit-scrollbar{display:none;}
+.dt{flex-shrink:0;padding:10px 14px;background:none;border:none;border-bottom:3px solid transparent;color:var(--mu);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.dt .d{width:5px;height:5px;border-radius:50%;}
+.dt.on{color:var(--acc);border-bottom-color:var(--acc);}
+.scr{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.scr::-webkit-scrollbar{width:0;}
+.pnl{display:none;padding:14px 14px calc(var(--sb) + 80px);}
+.pnl.on{display:block;}
+.sl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--mu);margin:18px 0 10px;display:flex;align-items:center;gap:8px;}
+.sl:first-child{margin-top:0;}
+.sl::after{content:'';flex:1;height:1px;background:var(--b1);}
+.sb{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:2px 8px;border-radius:2px;}
+.sb-s{background:rgba(255,124,59,.15);color:var(--str);}
+.sb-c{background:rgba(201,125,255,.15);color:var(--cir);}
+.sb-r{background:rgba(59,170,255,.15);color:var(--run);}
+.sb-st{background:rgba(232,255,59,.1);color:var(--sta);}
+.exc{background:var(--card);border:1px solid var(--b1);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.exc-h{padding:11px 13px 7px;display:flex;align-items:baseline;justify-content:space-between;}
+.exc-n{font-size:14px;font-weight:500;}
+.exc-t{font-size:11px;color:var(--mu2);font-family:'Barlow Condensed',sans-serif;}
+.srow{display:flex;gap:8px;padding:0 13px 12px;overflow-x:auto;scrollbar-width:none;}
+.srow::-webkit-scrollbar{display:none;}
+.sc{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;}
+.sc .lbl{font-size:8px;letter-spacing:1px;color:var(--mu);text-transform:uppercase;}
+.inp{width:60px;height:42px;background:var(--card2);border:1.5px solid var(--b2);color:var(--text);border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;text-align:center;-webkit-appearance:none;transition:border-color .15s;}
+.inp:focus{outline:none;border-color:var(--acc);background:#252525;}
+.inp.done{border-color:rgba(59,255,156,.5);color:var(--grn);}
+.inp::placeholder{color:#2a2a2a;}
+.inp.ti{color:var(--sta);width:72px;font-size:14px;}
+.inp.sm{width:54px;font-size:14px;}
+.rw{padding:0 13px 11px;display:flex;align-items:center;gap:5px;}
+.rl{font-size:9px;color:var(--mu);letter-spacing:1px;margin-right:2px;}
+.rb{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--b2);background:none;color:var(--mu);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rb.on{background:var(--acc);border-color:var(--acc);color:#000;}
+.rc{background:var(--card);border:1px solid var(--b1);border-radius:10px;margin-bottom:10px;padding:12px 13px;}
+.rc-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+.rc-n{font-size:14px;font-weight:500;}
+.rc-t{font-size:11px;color:var(--mu2);font-family:'Barlow Condensed',sans-serif;}
+.rf{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.rff{display:flex;flex-direction:column;gap:3px;}
+.rff .lbl{font-size:8px;color:var(--mu);letter-spacing:1px;text-transform:uppercase;}
+.stc{background:var(--card);border:1px solid var(--b1);border-radius:10px;margin-bottom:10px;}
+.stc-h{padding:11px 13px 0;display:flex;justify-content:space-between;align-items:baseline;}
+.stc-n{font-size:14px;font-weight:500;}
+.stc-t{font-size:11px;color:var(--mu2);font-family:'Barlow Condensed',sans-serif;}
+.stf{display:flex;gap:8px;padding:9px 13px 12px;flex-wrap:wrap;align-items:flex-end;}
+.sbtn{width:100%;padding:15px;background:var(--acc);color:#000;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:14px;}
+.sbtn:active{background:#d4eb2f;}
+.sconf{text-align:center;font-size:12px;color:var(--grn);letter-spacing:1px;margin-top:7px;height:18px;opacity:0;transition:opacity .3s;}
+.sconf.on{opacity:1;}
+.ntx{width:100%;background:var(--card);border:1.5px solid var(--b1);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:300;padding:11px 13px;border-radius:10px;resize:none;min-height:64px;-webkit-appearance:none;}
+.ntx:focus{outline:none;border-color:var(--acc);}
+.ntx::placeholder{color:var(--mu);}
+.rest-s{text-align:center;padding:40px 20px;}
+.rest-b{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:var(--mu);margin-bottom:10px;}
+.rest-sub{font-size:13px;color:var(--mu);line-height:2;}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.pst{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px;}
+.pst-l{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);margin-bottom:5px;}
+.pst-v{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--acc);}
+.pc{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:14px;margin-bottom:10px;}
+.pc-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
+.pc-n{font-size:14px;font-weight:500;}
+.pc-b{font-size:12px;color:var(--grn);}
+.ch{display:flex;gap:8px;align-items:flex-end;height:70px;margin-bottom:4px;}
+.cbw{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;}
+.cb{width:100%;border-radius:3px 3px 0 0;min-height:4px;transition:height .3s;}
+.cb-v{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--mu2);}
+.cb-w{font-size:8px;color:var(--mu);}
+.sr{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px;margin-bottom:10px;}
+.sr-n{font-size:13px;font-weight:500;color:var(--sta);margin-bottom:9px;display:flex;justify-content:space-between;}
+.sr-b{font-size:11px;color:var(--grn);}
+.chips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{background:var(--card2);border:1px solid var(--b2);border-radius:6px;padding:7px 11px;text-align:center;}
+.chip-w{font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;}
+.chip-t{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--sta);line-height:1.2;}
+.chip-t.b{color:var(--grn);}
+.rr{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px;margin-bottom:10px;}
+.rr-n{font-size:13px;font-weight:500;color:var(--run);margin-bottom:9px;display:flex;justify-content:space-between;}
+.rr-b{font-size:11px;color:var(--grn);}
+.rchips{display:flex;gap:7px;flex-wrap:wrap;}
+.rchip{background:var(--card2);border:1px solid var(--b2);border-radius:6px;padding:7px 11px;text-align:center;min-width:64px;}
+.rchip-w{font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;}
+.rchip-v{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--run);line-height:1.2;}
+.rchip-v.b{color:var(--grn);}
+.rchip-l{font-size:8px;color:var(--mu);}
+.empty{font-size:13px;color:var(--mu);padding:10px 0;}
+.dbtn{width:100%;padding:13px;background:rgba(255,76,59,.1);color:var(--red);border:1px solid rgba(255,76,59,.2);border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:20px;}
+.ib{background:rgba(232,255,59,.07);border:1px solid rgba(232,255,59,.2);border-radius:10px;padding:13px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;}
+.ib-i{font-size:22px;flex-shrink:0;}
+.ib-t{font-size:12px;color:#bbb;line-height:1.6;}
+.ib-t strong{color:var(--acc);}
+.ib-x{background:none;border:none;color:var(--mu);font-size:16px;cursor:pointer;flex-shrink:0;padding:0 2px;}
 </style>
 </head>
 <body>
-
-<header>
-  <div class="header-tag">Mixed HYROX — Advanced</div>
-  <h1>4-Week <span>Training</span><br/>Program</h1>
-  <div class="header-meta">
-    <div class="meta-item"><span class="meta-label">Format</span><span class="meta-value">Mixed</span></div>
-    <div class="meta-item"><span class="meta-label">Duration</span><span class="meta-value">4 Weeks</span></div>
-    <div class="meta-item"><span class="meta-label">Days/Week</span><span class="meta-value">5 (+1 opt)</span></div>
-    <div class="meta-item"><span class="meta-label">Level</span><span class="meta-value">Advanced</span></div>
-  </div>
-</header>
-
-<div class="structure-banner">
-  <div class="sp sp-run">Mon — Run</div>
-  <div class="sp sp-sc">Tue — Strength + Circuit</div>
-  <div class="sp sp-opt">Wed — Rest</div>
-  <div class="sp sp-sc">Thu — Strength + Circuit</div>
-  <div class="sp sp-run">Fri — Run</div>
-  <div class="sp sp-station">Sat — HYROX Stations</div>
-  <div class="sp sp-opt">Sun — Rest</div>
-</div>
-
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:var(--run)"></div>Run</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--strength)"></div>Strength</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--circuit)"></div>Circuit</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--station)"></div>Stations</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div>Full Sim</div>
-</div>
-
-<div class="week-nav">
-  <button class="week-btn active" onclick="showWeek(1)">Week 1<span class="wf">Foundation</span></button>
-  <button class="week-btn" onclick="showWeek(2)">Week 2<span class="wf">Build</span></button>
-  <button class="week-btn" onclick="showWeek(3)">Week 3<span class="wf">Peak</span></button>
-  <button class="week-btn" onclick="showWeek(4)">Week 4<span class="wf">Taper</span></button>
-</div>
-
-<div class="content">
-
-<!-- ===== WEEK 1 ===== -->
-<div class="week-panel active" id="week-1">
-  <div class="week-header">
-    <div>
-      <div class="week-title"><span>Week 1</span> — Foundation</div>
-      <div class="week-desc">Establish structure. Strength is heavy and compound-focused. Circuits are controlled and moderate. Station day is technique-first — no time pressure. Runs stay aerobic (Z2) with short bursts of race pace.</div>
-    </div>
-    <div><div class="vol-label">Run Volume</div><div class="vol-value">~26 km</div></div>
-  </div>
-  <div class="days-grid">
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Monday</span><span class="day-type type-run">Run</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Aerobic Base + Fartlek Surges</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Warm-up jog + dynamic drills</span><span class="xd">8 min</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">5 km Z2 run with 6 × 30s race-pace surges (every ~700 m)</span><span class="xd">5 km</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Cool-down jog</span><span class="xd">5 min</span></li>
-          </ul>
-        </div>
-        <div class="note note-r">Stay Z2 between the surges — they should feel sharp and controlled, not a sprint. This trains your body to change gears mid-run, exactly what you need coming out of each station.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Tuesday</span><span class="day-type type-sc">Strength + Circuit</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">A — Strength · 3 sets · 90s rest · ~25 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Back Squat</span><span class="xd">3 × 5 @ 80%</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Bent-over Barbell Row</span><span class="xd">3 × 6</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">DB Bench Press</span><span class="xd">3 × 8</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Dead Bug</span><span class="xd">3 × 10 e/s</span></li>
-          </ul>
-        </div>
-        <div class="session-block">
-          <div class="block-label">B — HYROX MetCon · 3 rounds · 60s rest · ~20 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">SkiErg</span><span class="xd">300 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Wall Balls (race weight)</span><span class="xd">20 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Sled Push Simulation (loaded plate push or heavy prowler)</span><span class="xd">20 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">12 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">KB Farmers Carry (race weight)</span><span class="xd">40 m</span></li>
-          </ul>
-        </div>
-        <div class="note note-p">~58 min total. 60s rest between rounds — shorter than before, by design. Sled push sim: load a plate on a towel/slider and push it across the floor, or use a prowler. No rest between exercises within a round.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Wednesday</span><span class="day-type type-rest">Rest</span></div>
-      <div class="rest-body">Full rest. Recovery between your two hardest strength days.<br/>Foam roll, stretch, sleep well.</div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Thursday</span><span class="day-type type-sc">Strength + Circuit</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">A — Strength · 3 sets · 90s rest · ~25 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Trap Bar Deadlift</span><span class="xd">3 × 5 @ 80%</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Weighted Pull-ups</span><span class="xd">3 × 6</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">DB Romanian Deadlift (sled hip drive)</span><span class="xd">3 × 10</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Copenhagen Plank</span><span class="xd">3 × 20s e/s</span></li>
-          </ul>
-        </div>
-        <div class="session-block">
-          <div class="block-label">B — HYROX AMRAP · 15 min · log rounds · ~20 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Row Erg</span><span class="xd">250 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Sled Pull Simulation (band row or seated cable pull)</span><span class="xd">20 m equiv.</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Sandbag Lunges (race weight)</span><span class="xd">25 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">10 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Wall Balls (race weight)</span><span class="xd">15 reps</span></li>
-          </ul>
-        </div>
-        <div class="note note-p">~58 min total. 15 min AMRAP — log your rounds, this is your baseline. Sled pull sim: heavy band anchored low, walk backwards pulling it hand-over-hand, or 15 x heavy cable row. No rest within the round.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Friday</span><span class="day-type type-run">Run</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Threshold Intervals</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Warm-up jog</span><span class="xd">8 min</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">5 × 1 km at threshold pace</span><span class="xd">75s rest</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Cool-down jog</span><span class="xd">5 min</span></li>
-          </ul>
-        </div>
-        <div class="note note-r">Threshold = 7–8/10, comfortably hard. 75s rest is tight — you won't fully recover between reps, which is exactly the point. Equal splits across all 5.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Saturday</span><span class="day-type type-station">HYROX Stations</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Technique Day — 1× each · light load · no time pressure · ~50 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">SkiErg</span><span class="xd">1 × 1000 m easy</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Sled Push + Pull</span><span class="xd">1 × 25 m (light)</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">20 reps</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Row Erg</span><span class="xd">1 × 1000 m easy</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">KB Farmers Carry</span><span class="xd">1 × 25 m</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Sandbag Lunges</span><span class="xd">1 × 25 m</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Wall Balls</span><span class="xd">50 reps</span></li>
-          </ul>
-        </div>
-        <div class="note note-s">Dial in stroke rate on SkiErg/Row, foot placement on sled, depth on wall balls. Technique now = time saved on race day.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Sunday</span><span class="day-type type-rest">Rest</span></div>
-      <div class="rest-body">Full rest or 20 min gentle mobility.<br/>Foam roll calves, quads, hip flexors.</div>
-    </div>
-
+<div class="topbar">
+  <div class="tb-title">HYROX <span>Log</span></div>
+  <div class="wk-pill">
+    <select id="wkSel" onchange="switchWeek(+this.value)">
+      <option value="1">W1 · Foundation</option>
+      <option value="2">W2 · Build</option>
+      <option value="3">W3 · Peak</option>
+      <option value="4">W4 · Taper</option>
+    </select>
+    <span style="color:var(--mu);font-size:11px;pointer-events:none;">▾</span>
   </div>
 </div>
+<div class="dtabs">
+  <button class="dt on" onclick="sd('mon',this)"><span class="d" style="background:var(--run)"></span>Mon</button>
+  <button class="dt" onclick="sd('tue',this)"><span class="d" style="background:var(--cir)"></span>Tue</button>
+  <button class="dt" onclick="sd('wed',this)"><span class="d" style="background:var(--mu)"></span>Wed</button>
+  <button class="dt" onclick="sd('thu',this)"><span class="d" style="background:var(--cir)"></span>Thu</button>
+  <button class="dt" onclick="sd('fri',this)"><span class="d" style="background:var(--run)"></span>Fri</button>
+  <button class="dt" onclick="sd('sat',this)"><span class="d" style="background:var(--sta)"></span>Sat</button>
+  <button class="dt" onclick="sd('prog',this)"><span class="d" style="background:var(--grn)"></span>Progress</button>
+</div>
+<div class="scr" id="scr">
 
-<!-- ===== WEEK 2 ===== -->
-<div class="week-panel" id="week-2">
-  <div class="week-header">
-    <div>
-      <div class="week-title"><span>Week 2</span> — Build</div>
-      <div class="week-desc">Increase strength loads and circuit duration. Runs grow in volume and introduce race-pace embedded efforts. Station day moves to timed sets at moderate load — start tracking your splits per station.</div>
-    </div>
-    <div><div class="vol-label">Run Volume</div><div class="vol-value">~32 km</div></div>
-  </div>
-  <div class="days-grid">
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Monday</span><span class="day-type type-run">Run</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Race Pace Intervals + Finisher</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Warm-up jog</span><span class="xd">8 min easy</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">6 × 1 km at race pace</span><span class="xd">75s rest</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Rest</span><span class="xd">2 min</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">400 m all-out — faster than race pace</span><span class="xd">max effort</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Cool-down jog</span><span class="xd">5 min</span></li>
-          </ul>
-        </div>
-        <div class="note note-r">6 race-pace reps then one brutal 400 m on already-tired legs. This trains you to push hard when you most want to stop — exactly what the last km of the race demands.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Tuesday</span><span class="day-type type-sc">Strength + Circuit</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">A — Strength · 3 sets · 90s rest · ~25 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Back Squat</span><span class="xd">3 × 4 @ 85%</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Weighted Pull-ups</span><span class="xd">3 × 5</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Romanian Deadlift</span><span class="xd">3 × 8</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Back Extension (GHD or bench)</span><span class="xd">3 × 12</span></li>
-          </ul>
-        </div>
-        <div class="session-block">
-          <div class="block-label">B — HYROX Run-Embedded · 4 rounds · 60s rest · ~28 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">400 m run at race pace → immediately:</span><span class="xd">no stop</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">SkiErg</span><span class="xd">300 m hard</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Sled Push Simulation</span><span class="xd">25 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Wall Balls (race weight)</span><span class="xd">20 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">12 reps</span></li>
-          </ul>
-        </div>
-        <div class="note note-p">~58 min total. 4 rounds now, 60s rest. Run straight into SkiErg — zero pause. Sled push sim goes straight after SkiErg while lungs are still burning. This is exactly the race feeling.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Wednesday</span><span class="day-type type-rest">Rest</span></div>
-      <div class="rest-body">Full rest. Two tough strength days either side — let the body absorb the work.<br/>Mobility or light walk if needed.</div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Thursday</span><span class="day-type type-sc">Strength + Circuit</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">A — Strength · 3 sets · 90s rest · ~25 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Trap Bar Deadlift</span><span class="xd">3 × 4 @ 85%</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Bulgarian Split Squat (KB)</span><span class="xd">3 × 8 e/s</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">DB Bench Press</span><span class="xd">3 × 8</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Single-leg RDL</span><span class="xd">3 × 8 e/s</span></li>
-          </ul>
-        </div>
-        <div class="session-block">
-          <div class="block-label">B — HYROX AMRAP · 18 min · beat Week 1 · ~22 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Row Erg</span><span class="xd">250 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Sled Pull Simulation (heavy band or cable)</span><span class="xd">20 m equiv.</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">KB Farmers Carry (race weight)</span><span class="xd">50 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">12 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Wall Balls (race weight)</span><span class="xd">20 reps</span></li>
-          </ul>
-        </div>
-        <div class="note note-p">~58 min total. 18 min AMRAP — farmers carry into wall balls is exactly what destroys your arms in the race. Sled pull sim between row and carry keeps the upper back constantly loaded. Beat Week 1 round count.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Friday</span><span class="day-type type-run">Run</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Tempo + Sprint Finishers</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Easy jog</span><span class="xd">8 min</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">2 km at Z2 → 3 km at threshold</span><span class="xd">negative split</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Rest</span><span class="xd">90s</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">4 × 200 m faster than race pace</span><span class="xd">45s rest</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Cool-down jog</span><span class="xd">5 min</span></li>
-          </ul>
-        </div>
-        <div class="note note-r">Build through the tempo then hit 4 fast 200s on tired legs. The 45s rest between them is deliberately short — practice staying smooth when breathing is hard. This is what running out of a heavy station feels like.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Saturday</span><span class="day-type type-station">HYROX Stations</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Timed Station Block — 2 rounds · moderate race load · record splits · ~55 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">SkiErg 1000 m</span><span class="xd">target split</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Sled Push 50 m + Sled Pull 50 m</span><span class="xd">mod. weight</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">30 reps</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Row Erg 1000 m</span><span class="xd">target split</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">KB Farmers Carry</span><span class="xd">50 m</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Sandbag Lunges</span><span class="xd">25 m</span></li>
-            <li><span class="dot" style="background:var(--station)"></span><span class="xn">Wall Balls</span><span class="xd">75 reps</span></li>
-          </ul>
-        </div>
-        <div class="note note-s">Record time per station. This is your benchmark to beat in Week 3.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Sunday</span><span class="day-type type-rest">Rest</span></div>
-      <div class="rest-body">Full rest. Week 2 loads are high — let your body adapt.<br/>Prioritise sleep and protein intake.</div>
-    </div>
-
-  </div>
+<div class="pnl on" id="p-mon">
+  <div id="ib" class="ib"><div class="ib-i">📲</div><div class="ib-t"><strong>Add to Home Screen</strong> — tap Share in Safari → "Add to Home Screen" to install as an offline app.</div><button class="ib-x" onclick="closeIB()">✕</button></div>
+  <div class="sl"><span class="sb sb-r">Run</span><span id="mon-d">Aerobic Base + Fartlek</span></div>
+  <div id="mon-segs"></div>
+  <div class="sl"><span class="sb sb-r">Notes</span></div>
+  <textarea class="ntx" id="n-mon" placeholder="How did it feel? Pace notes..."></textarea>
+  <button class="sbtn" onclick="sv('mon')">Save Monday</button>
+  <div class="sconf" id="sc-mon">✓ Saved</div>
 </div>
 
-<!-- ===== WEEK 3 ===== -->
-<div class="week-panel" id="week-3">
-  <div class="week-header">
-    <div>
-      <div class="week-title"><span>Week 3</span> — Peak</div>
-      <div class="week-desc">Highest load of the block. Strength near-maximal. Circuits at race weights. Saturday is a half-sim — 4 runs + first 4 stations at race effort. Enough to confirm your pacing without leaving you wrecked before race week.</div>
-    </div>
-    <div><div class="vol-label">Run Volume</div><div class="vol-value">~38 km</div></div>
+<div class="pnl" id="p-tue">
+  <div class="sl"><span class="sb sb-s">A — Strength</span><span id="tue-sl">3 sets · 90s rest</span></div>
+  <div id="tue-sc"></div>
+  <div class="sl"><span class="sb sb-c">B — Circuit</span><span id="tue-cl">3 rounds</span></div>
+  <div id="tue-cc"></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+    <span style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;">Rounds completed</span>
+    <input class="inp" id="tue-amrap" placeholder="0" oninput="fi(this)" inputmode="numeric" style="width:56px;"/>
   </div>
-  <div class="days-grid">
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Monday</span><span class="day-type type-run">Run</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Full Race Run Volume — 8 × 1 km</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Warm-up jog</span><span class="xd">8 min easy</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">8 × 1 km at race pace</span><span class="xd">60s rest</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Cool-down jog</span><span class="xd">5 min</span></li>
-          </ul>
-        </div>
-        <div class="note note-r">This IS the race. 8 km of race-pace running with only 60s rest — simulate the running segments between stations. All equal splits. If you can hold this, you can hold it on race day.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Tuesday</span><span class="day-type type-sc">Strength + Circuit</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">A — Heavy Strength · 3 sets · 90s rest · ~25 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Back Squat</span><span class="xd">3 × 3 @ 88–90%</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Weighted Pull-ups</span><span class="xd">3 × 4</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Trap Bar Deadlift</span><span class="xd">3 × 3 @ 88%</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Hollow Body Hold</span><span class="xd">3 × 30s</span></li>
-          </ul>
-        </div>
-        <div class="session-block">
-          <div class="block-label">B — HYROX Race-Sim · 4 rounds · 60s rest · ~28 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">400 m at race pace → immediately:</span><span class="xd">no stop</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">SkiErg</span><span class="xd">300 m hard</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Sled Push Simulation (max effort)</span><span class="xd">25 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Wall Balls (race weight)</span><span class="xd">25 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">KB Lunges (race weight)</span><span class="xd">25 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">15 reps</span></li>
-          </ul>
-        </div>
-        <div class="note note-p">~58 min total. 6 movements, 4 rounds, 60s rest. Race weights, no scaling, no shortcuts. If round 4 doesn't hurt, you went too easy on rounds 1–3.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Wednesday</span><span class="day-type type-rest">Rest</span></div>
-      <div class="rest-body">Full rest. Peak week — quality over quantity.<br/>Sleep 8–9 hrs. Prioritise protein and hydration.</div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Thursday</span><span class="day-type type-sc">Strength + Circuit</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">A — Strength Accessory · 3 sets · 90s rest · ~25 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Trap Bar Deadlift</span><span class="xd">3 × 3 @ 88%</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Bulgarian Split Squat (heavy)</span><span class="xd">3 × 6 e/s</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">DB Bench Press</span><span class="xd">3 × 6</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Copenhagen Plank</span><span class="xd">3 × 25s e/s</span></li>
-          </ul>
-        </div>
-        <div class="session-block">
-          <div class="block-label">B — HYROX AMRAP · 15 min · push hard · ~18 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Row Erg</span><span class="xd">200 m hard</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Sandbag Lunges (race weight)</span><span class="xd">25 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">10 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">KB Farmers Carry (race weight)</span><span class="xd">50 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Wall Balls (race weight)</span><span class="xd">12 reps</span></li>
-          </ul>
-        </div>
-        <div class="note note-p">~55 min total. 5 HYROX movements at race weight — this should hurt. Peak week, embrace it.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Friday</span><span class="day-type type-run">Run</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Mixed Pace Session — Race Pace + Overdrive</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Warm-up jog</span><span class="xd">8 min easy</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">4 × 1 km at race pace</span><span class="xd">60s rest</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Rest</span><span class="xd">2 min</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">4 × 400 m at 5–10 sec faster than race pace</span><span class="xd">60s rest</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Cool-down jog</span><span class="xd">5 min</span></li>
-          </ul>
-        </div>
-        <div class="note note-r">4 km at race pace to prime the legs, then 4 overdrive 400s. The faster 400s build top-end speed so race pace feels easier. Peak week — push hard on the 400s, they should be uncomfortable.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Saturday</span><span class="day-type type-full">Half Simulation</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">HYROX Half-Sim — 4 runs + 4 stations · race weights · no rest · ~35–40 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--accent2)"></span><span class="xn">1 km run → SkiErg 1000 m</span><span class="xd">→</span></li>
-            <li><span class="dot" style="background:var(--accent2)"></span><span class="xn">1 km run → Sled Push 50 m</span><span class="xd">→</span></li>
-            <li><span class="dot" style="background:var(--accent2)"></span><span class="xn">1 km run → Sled Pull 50 m</span><span class="xd">→</span></li>
-            <li><span class="dot" style="background:var(--accent2)"></span><span class="xn">1 km run → Burpee Broad Jumps 80 reps</span><span class="xd">finish</span></li>
-          </ul>
-        </div>
-        <div class="note note-s">🏁 Race weights, race effort — 90%, not all-out. These are stations 1–4, the ones you'll hit with freshest legs on race day. Lock in transitions and pacing. Time the whole thing.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Sunday</span><span class="day-type type-rest">Rest</span></div>
-      <div class="rest-body">Complete rest. Peak week done.<br/>8–9 hrs sleep. High protein. You've earned it.</div>
-    </div>
-
-  </div>
+  <div class="sl"><span class="sb sb-c">Notes</span></div>
+  <textarea class="ntx" id="n-tue" placeholder="PBs, energy, what to improve..."></textarea>
+  <button class="sbtn" onclick="sv('tue')">Save Tuesday</button>
+  <div class="sconf" id="sc-tue">✓ Saved</div>
 </div>
 
-<!-- ===== WEEK 4 ===== -->
-<div class="week-panel" id="week-4">
-  <div class="week-header">
-    <div>
-      <div class="week-title"><span>Week 4</span> — Taper &amp; Race</div>
-      <div class="week-desc">Volume drops sharply. Two short strength sessions early in the week, then full rest Thursday and Friday. Race is Saturday — arrive fresh, sharp, and confident.</div>
-    </div>
-    <div><div class="vol-label">Run Volume</div><div class="vol-value">~15 km</div></div>
-  </div>
-  <div class="days-grid">
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Monday</span><span class="day-type type-run">Run</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Taper Sharpener · ~45 min total</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Warm-up jog</span><span class="xd">10 min</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">4 × 1 km at race pace</span><span class="xd">90s rest</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">2 × 200 m faster than race pace</span><span class="xd">60s rest</span></li>
-            <li><span class="dot" style="background:var(--run)"></span><span class="xn">Cool-down jog</span><span class="xd">8 min</span></li>
-          </ul>
-        </div>
-        <div class="note note-r">Half the volume of W3 but same intensity. The 2 fast 200s at the end are just a reminder to your legs that they know how to move. Race pace should feel easy after W3. If it doesn't, you're going too fast.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Tuesday</span><span class="day-type type-sc">Strength + Circuit</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">A — Maintenance Strength · 2 sets · 90s rest · ~18 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Back Squat</span><span class="xd">2 × 4 @ 75%</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Pull-ups (bodyweight)</span><span class="xd">2 × 6</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Romanian Deadlift (light)</span><span class="xd">2 × 8</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Dead Bug</span><span class="xd">2 × 10 e/s</span></li>
-          </ul>
-        </div>
-        <div class="session-block">
-          <div class="block-label">B — Short HYROX Circuit · 2 rounds only</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">SkiErg</span><span class="xd">200 m easy</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Wall Balls (race weight)</span><span class="xd">15 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">8 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">KB Farmers Carry</span><span class="xd">25 m</span></li>
-          </ul>
-        </div>
-        <div class="note note-p">2 rounds — not 4. Race weights to keep movement feel sharp. Leave the session feeling fresh, not spent.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Wednesday</span><span class="day-type type-rest">Rest</span></div>
-      <div class="rest-body">Full rest. Taper week — resist the urge to do extra.<br/>Mobility, hydration, and sleep are the work now.</div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Thursday</span><span class="day-type type-sc">Strength + Circuit</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">A — Activation · 2 sets · 90s rest · ~18 min</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Goblet Squat</span><span class="xd">2 × 10 light</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">DB Row</span><span class="xd">2 × 10</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Glute Bridge + Hip Hinge</span><span class="xd">2 × 12</span></li>
-            <li><span class="dot" style="background:var(--strength)"></span><span class="xn">Copenhagen Plank</span><span class="xd">2 × 20s e/s</span></li>
-          </ul>
-        </div>
-        <div class="session-block">
-          <div class="block-label">B — HYROX Race-Feel · 1 round only</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Row Erg</span><span class="xd">200 m easy</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Wall Balls (race weight)</span><span class="xd">20 reps</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">KB Farmers Carry</span><span class="xd">25 m</span></li>
-            <li><span class="dot" style="background:var(--circuit)"></span><span class="xn">Burpee Broad Jumps</span><span class="xd">8 reps</span></li>
-          </ul>
-        </div>
-        <div class="note note-p">One round, then stop. After the circuit, do a quick mental rehearsal: SkiErg 200 m easy + Sled Push/Pull 25 m light. Leave the gym feeling sharp, not tired.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Friday</span><span class="day-type type-rest">Rest</span></div>
-      <div class="rest-body">Complete rest the day before race.<br/>Carb-load moderately. Hydrate all day. Pack your kit. Sleep early.</div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Saturday</span><span class="day-type type-full">Race Day 🏁</span></div>
-      <div class="day-body">
-        <div class="session-block">
-          <div class="block-label">Mixed HYROX</div>
-          <ul class="ex">
-            <li><span class="dot" style="background:var(--accent2)"></span><span class="xn">Warm-up: 10 min jog + glute + shoulder activation</span><span class="xd">pre-race</span></li>
-            <li><span class="dot" style="background:var(--accent2)"></span><span class="xn">Race — execute the plan</span><span class="xd">all out</span></li>
-          </ul>
-        </div>
-        <div class="note note-s">Start the first km 5–10 sec slower than your target — you'll make it back. Trust your training. Go.</div>
-      </div>
-    </div>
-
-    <div class="day-card">
-      <div class="day-header"><span class="day-name">Sunday</span><span class="day-type type-rest">Rest</span></div>
-      <div class="rest-body">Post-race recovery. Walk, eat well, celebrate.<br/>You earned it.</div>
-    </div>
-
-  </div>
+<div class="pnl" id="p-wed">
+  <div class="rest-s"><div class="rest-b">REST</div><div class="rest-sub">Foam roll TFL · Hip flexor stretch<br/>Glute activation · Sleep 8+ hrs</div></div>
+  <div class="sl"><span class="sb sb-r">Notes</span></div>
+  <textarea class="ntx" id="n-wed" placeholder="Body feel, sleep, soreness..."></textarea>
+  <button class="sbtn" onclick="sv('wed')">Save Notes</button>
+  <div class="sconf" id="sc-wed">✓ Saved</div>
 </div>
 
-<!-- NOTES -->
-<div class="program-notes">
-  <div class="notes-title">// Program Notes</div>
-  <div class="notes-grid">
-    <div><div class="ni-title">Weekly Structure</div><div class="ni-text">Mon = Run. Tue = Strength + Circuit. Wed = Rest. Thu = Strength + Circuit. Fri = Run. Sat = HYROX Stations. Sun = Rest. W4 exception: Thu = last strength session, Fri = Rest, Sat = Race.</div></div>
-    <div><div class="ni-title">Sled Prep</div><div class="ni-text">Sled push is 80% leg drive — back squat, trap bar deadlift and Bulgarian split squats build this directly. Sled pull is horizontal pulling — bent-over row and weighted pull-ups transfer directly. The RDL added to Thu builds the hip hinge lockout at the end of each sled stride. Practice both push and pull on every Sat station day.</div></div>
-    <div><div class="ni-title">Strength Philosophy</div><div class="ni-text">Heavy compound lifts (squat, deadlift, pull) build the structural base for sled, carry, and lunges. Never skip the strength block just to get more circuit reps in — you need both.</div></div>
-    <div><div class="ni-title">Circuit Philosophy</div><div class="ni-text">Circuits train you to work at a station after arriving gassed from a run. Wall balls and KB lunges in circuits directly reinforce station-specific endurance. The run-embedded circuit on Tue is the most race-specific training you'll do.</div></div>
-    <div><div class="ni-title">Mixed HYROX Weights</div><div class="ni-text">Sled Push: +102/+52 kg. Sled Pull: +103/+53 kg. Farmers: 2×24/2×16 kg. Sandbag: 20/10 kg. Wall Balls: 6/4 kg. KB Lunges: 2×24/2×16 kg.</div></div>
-    <div><div class="ni-title">Solo Training Tips</div><div class="ni-text">Use a GPS watch or phone to auto-split each km during runs. For the simulation, set a timer per station. On race day in Mixed HYROX, you and your partner each complete your own running segments — your individual station performance is where you control the clock.</div></div>
-    <div><div class="ni-title">Nutrition</div><div class="ni-text">2g protein/kg BW daily. Carb-load Fri–Sat before race. Race morning: carb meal 2–3 hrs prior. Gel every 20–25 min during race, sip water at every station entry.</div></div>
+<div class="pnl" id="p-thu">
+  <div class="sl"><span class="sb sb-s">A — Strength</span><span id="thu-sl">3 sets · 90s rest</span></div>
+  <div id="thu-sc"></div>
+  <div class="sl"><span class="sb sb-c">B — AMRAP</span><span id="thu-cl">15 min</span></div>
+  <div id="thu-cc"></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+    <span style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;">Total rounds — beat last week!</span>
+    <input class="inp" id="thu-amrap" placeholder="0" oninput="fi(this)" inputmode="numeric" style="width:56px;"/>
   </div>
+  <div class="sl"><span class="sb sb-c">Notes</span></div>
+  <textarea class="ntx" id="n-thu" placeholder="AMRAP score, weights, how it felt..."></textarea>
+  <button class="sbtn" onclick="sv('thu')">Save Thursday</button>
+  <div class="sconf" id="sc-thu">✓ Saved</div>
 </div>
 
-</div><!-- /content -->
+<div class="pnl" id="p-fri">
+  <div class="sl"><span class="sb sb-r">Run</span><span id="fri-d">Threshold Intervals</span></div>
+  <div id="fri-segs"></div>
+  <div class="sl"><span class="sb sb-r">Notes</span></div>
+  <textarea class="ntx" id="n-fri" placeholder="Pace splits, HR, how it felt..."></textarea>
+  <button class="sbtn" onclick="sv('fri')">Save Friday</button>
+  <div class="sconf" id="sc-fri">✓ Saved</div>
+</div>
 
+<div class="pnl" id="p-sat">
+  <div class="sl"><span class="sb sb-st">Stations</span><span id="sat-d">Log time + weight per station</span></div>
+  <div id="sat-stc"></div>
+  <div class="stc" style="margin-bottom:10px;">
+    <div class="stc-h"><div class="stc-n">⏱ Total Session</div></div>
+    <div class="stf"><div class="rff"><div class="lbl">Total Time</div><input class="inp ti" id="sat-total" placeholder="mm:ss" oninput="fi(this)"/></div></div>
+    <div class="rw"><span class="rl">Overall RPE</span><div id="r-sat-ov"></div></div>
+  </div>
+  <div class="sl"><span class="sb sb-st">Notes</span></div>
+  <textarea class="ntx" id="n-sat" placeholder="Weakest station? Sled weight? Technique..."></textarea>
+  <button class="sbtn" onclick="sv('sat')">Save Saturday</button>
+  <div class="sconf" id="sc-sat">✓ Saved</div>
+</div>
+
+<div class="pnl" id="p-prog">
+  <div class="sl">Overview</div>
+  <div class="pgrid">
+    <div class="pst"><div class="pst-l">Sessions Logged</div><div class="pst-v" id="ps-s">0</div></div>
+    <div class="pst"><div class="pst-l">Weeks Active</div><div class="pst-v" id="ps-w">0</div></div>
+    <div class="pst"><div class="pst-l">Best SkiErg 1km</div><div class="pst-v" id="ps-ski" style="font-size:20px">—</div></div>
+    <div class="pst"><div class="pst-l">Best Row 1km</div><div class="pst-v" id="ps-row" style="font-size:20px">—</div></div>
+  </div>
+  <div class="sl">Strength Progress</div>
+  <div id="p-str"><div class="empty">Log Tue/Thu to see strength progress.</div></div>
+  <div class="sl">Run Pace Progress</div>
+  <div id="p-run"><div class="empty">Log Mon/Fri runs to see pace progress.</div></div>
+  <div class="sl">Station Times</div>
+  <div id="p-sta"><div class="empty">Log Saturday stations to see progress.</div></div>
+  <div class="sl">AMRAP Progress</div>
+  <div class="pc">
+    <div class="pc-h"><div class="pc-n">Thu AMRAP Rounds</div><div class="pc-b" id="p-ab"></div></div>
+    <div class="ch" id="p-ac"><div class="empty">No data yet.</div></div>
+  </div>
+  <button class="dbtn" onclick="nuke()">Clear All Data</button>
+</div>
+
+</div>
 <script>
-function showWeek(n) {
-  document.querySelectorAll('.week-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.week-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('week-' + n).classList.add('active');
-  document.querySelectorAll('.week-btn')[n-1].classList.add('active');
+const SK='hx_v4';
+const G=()=>{try{return JSON.parse(localStorage.getItem(SK))||{};}catch{return{};}};
+const P=d=>localStorage.setItem(SK,JSON.stringify(d));
+
+const WC={
+1:{
+mon:{d:‘Aerobic Base + Fartlek Surges’,segs:[{n:‘Warm-up jog + drills’,t:‘8 min’},{n:‘5 km Z2 + 6×30s race-pace surges’,t:‘5 km’},{n:‘Cool-down jog’,t:‘5 min’}]},
+tue:{sl:‘3 sets · 90s rest · RPE 8/10’,cl:‘3 rounds · 60s rest’,
+str:[{n:‘Back Squat’,t:‘3×5 @80%’},{n:‘Bent-over Row’,t:‘3×6’},{n:‘DB Bench Press’,t:‘3×8’},{n:‘Dead Bug’,t:‘3×10 e/s’}],
+cir:[{n:‘SkiErg’,t:‘300 m’},{n:‘Wall Balls (race wt)’,t:‘20 reps’},{n:‘Sled Push Sim’,t:‘20 m’},{n:‘Burpee Broad Jumps’,t:‘12 reps’},{n:‘KB Farmers Carry’,t:‘40 m’}]},
+thu:{sl:‘3 sets · 90s rest · RPE 8/10’,cl:‘AMRAP 15 min’,
+str:[{n:‘Trap Bar Deadlift’,t:‘3×5 @80%’},{n:‘Weighted Pull-ups’,t:‘3×6’},{n:‘DB Romanian DL’,t:‘3×10’},{n:‘Copenhagen Plank’,t:‘3×20s e/s’}],
+cir:[{n:‘Row Erg’,t:‘250 m’},{n:‘Sled Pull Sim’,t:‘20 m’},{n:‘Sandbag Lunges’,t:‘25 m’},{n:‘Burpee Broad Jumps’,t:‘10 reps’},{n:‘Wall Balls (race wt)’,t:‘15 reps’}]},
+fri:{d:‘Threshold Intervals’,segs:[{n:‘Warm-up jog’,t:‘8 min’},{n:‘5 × 1 km threshold’,t:‘75s rest’},{n:‘Cool-down jog’,t:‘5 min’}]},
+sat:{d:‘Technique Day · no time pressure’,stas:[{n:‘🎿 SkiErg’,t:‘1000 m easy’},{n:‘🛷 Sled Push’,t:‘25 m light’},{n:‘🔗 Sled Pull’,t:‘25 m light’},{n:‘⚡ Burpee Broad Jumps’,t:‘20 reps’},{n:‘🚣 Row Erg’,t:‘1000 m easy’},{n:‘🏋️ Farmers Carry’,t:‘25 m’},{n:‘🎒 Sandbag Lunges’,t:‘25 m’},{n:‘🏀 Wall Balls’,t:‘50 reps’}]}
+},
+2:{
+mon:{d:‘Race Pace + All-Out Finisher’,segs:[{n:‘Warm-up jog’,t:‘8 min’},{n:‘6 × 1 km @ race pace’,t:‘75s rest’},{n:‘Rest’,t:‘2 min’},{n:‘400 m all-out finisher’,t:‘max effort’},{n:‘Cool-down jog’,t:‘5 min’}]},
+tue:{sl:‘3 sets · 90s rest · RPE 8/10’,cl:‘4 rounds · 60s rest’,
+str:[{n:‘Back Squat’,t:‘3×4 @85%’},{n:‘Weighted Pull-ups’,t:‘3×5’},{n:‘Romanian Deadlift’,t:‘3×8’},{n:‘Back Extension’,t:‘3×12’}],
+cir:[{n:‘400m run → SkiErg’,t:‘300 m no rest’},{n:‘Sled Push Sim’,t:‘25 m’},{n:‘Wall Balls (race wt)’,t:‘20 reps’},{n:‘Burpee Broad Jumps’,t:‘12 reps’}]},
+thu:{sl:‘3 sets · 90s rest · RPE 8/10’,cl:‘AMRAP 18 min’,
+str:[{n:‘Trap Bar Deadlift’,t:‘3×4 @85%’},{n:‘Bulgarian Split Squat’,t:‘3×8 e/s’},{n:‘DB Bench Press’,t:‘3×8’},{n:‘Single-leg RDL’,t:‘3×8 e/s’}],
+cir:[{n:‘Row Erg’,t:‘250 m’},{n:‘Sled Pull Sim’,t:‘20 m’},{n:‘KB Farmers Carry’,t:‘50 m’},{n:‘Burpee Broad Jumps’,t:‘12 reps’},{n:‘Wall Balls (race wt)’,t:‘20 reps’}]},
+fri:{d:‘Tempo + Sprint Finishers’,segs:[{n:‘Easy jog’,t:‘8 min’},{n:‘2 km Z2 → 3 km threshold’,t:‘negative split’},{n:‘Rest’,t:‘90s’},{n:‘4 × 200 m faster than race pace’,t:‘45s rest’},{n:‘Cool-down jog’,t:‘5 min’}]},
+sat:{d:‘Timed Stations · 2 rounds · record splits’,stas:[{n:‘🎿 SkiErg’,t:‘1000 m timed’},{n:‘🛷 Sled Push’,t:‘50 m mod wt’},{n:‘🔗 Sled Pull’,t:‘50 m mod wt’},{n:‘⚡ Burpee Broad Jumps’,t:‘30 reps’},{n:‘🚣 Row Erg’,t:‘1000 m timed’},{n:‘🏋️ Farmers Carry’,t:‘50 m’},{n:‘🎒 Sandbag Lunges’,t:‘25 m’},{n:‘🏀 Wall Balls’,t:‘75 reps’}]}
+},
+3:{
+mon:{d:‘Full Race Volume — 8×1km’,segs:[{n:‘Warm-up jog’,t:‘8 min’},{n:‘8 × 1 km @ race pace’,t:‘60s rest’},{n:‘Cool-down jog’,t:‘5 min’}]},
+tue:{sl:‘3 sets · 90s rest · RPE 9/10’,cl:‘4 rounds · 60s rest · race weights’,
+str:[{n:‘Back Squat’,t:‘3×3 @88-90%’},{n:‘Weighted Pull-ups’,t:‘3×4’},{n:‘Trap Bar Deadlift’,t:‘3×3 @88%’},{n:‘Hollow Body Hold’,t:‘3×30s’}],
+cir:[{n:‘400m run → SkiErg’,t:‘300 m no rest’},{n:‘Sled Push Sim (max)’,t:‘25 m’},{n:‘Wall Balls (race wt)’,t:‘25 reps’},{n:‘KB Lunges (race wt)’,t:‘25 m’},{n:‘Burpee Broad Jumps’,t:‘15 reps’}]},
+thu:{sl:‘3 sets · 90s rest · RPE 9/10’,cl:‘AMRAP 20 min · race weights’,
+str:[{n:‘Trap Bar Deadlift’,t:‘3×3 @88%’},{n:‘Bulgarian Split Squat’,t:‘3×6 e/s’},{n:‘DB Bench Press’,t:‘3×6’},{n:‘Copenhagen Plank’,t:‘3×25s e/s’}],
+cir:[{n:‘Row Erg’,t:‘250 m max’},{n:‘Sled Pull Sim (max)’,t:‘20 m’},{n:‘Sandbag Lunges’,t:‘25 m’},{n:‘Burpee Broad Jumps’,t:‘15 reps’},{n:‘KB Farmers Carry’,t:‘50 m’},{n:‘Wall Balls (race wt)’,t:‘20 reps’}]},
+fri:{d:‘Mixed Pace — Race + Overdrive’,segs:[{n:‘Warm-up jog’,t:‘8 min’},{n:‘4 × 1 km @ race pace’,t:‘60s rest’},{n:‘Rest’,t:‘2 min’},{n:‘4 × 400 m faster than race pace’,t:‘60s rest’},{n:‘Cool-down jog’,t:‘5 min’}]},
+sat:{d:‘Half Simulation · race weights’,stas:[{n:‘🎿 SkiErg’,t:‘1000 m race pace’},{n:‘🛷 Sled Push’,t:’+102 kg · 50 m’},{n:‘🔗 Sled Pull’,t:’+103 kg · 50 m’},{n:‘⚡ Burpee Broad Jumps’,t:‘80 reps’},{n:‘🚣 Row Erg’,t:’— half sim’},{n:‘🏋️ Farmers Carry’,t:’—’},{n:‘🎒 Sandbag Lunges’,t:’—’},{n:‘🏀 Wall Balls’,t:’—’}]}
+},
+4:{
+mon:{d:‘Taper Sharpener’,segs:[{n:‘Warm-up jog’,t:‘10 min’},{n:‘4 × 1 km @ race pace’,t:‘90s rest’},{n:‘2 × 200 m overdrive’,t:‘60s rest’},{n:‘Cool-down jog’,t:‘8 min’}]},
+tue:{sl:‘2 sets · taper’,cl:‘2 rounds only’,
+str:[{n:‘Back Squat’,t:‘2×4 @75%’},{n:‘Pull-ups (BW)’,t:‘2×6’},{n:‘Romanian DL light’,t:‘2×8’},{n:‘Dead Bug’,t:‘2×10 e/s’}],
+cir:[{n:‘SkiErg’,t:‘200 m easy’},{n:‘Wall Balls (race wt)’,t:‘15 reps’},{n:‘Burpee Broad Jumps’,t:‘8 reps’},{n:‘KB Farmers Carry’,t:‘25 m’}]},
+thu:{sl:‘2 sets · activation’,cl:‘1 round only’,
+str:[{n:‘Goblet Squat’,t:‘2×10 light’},{n:‘DB Row’,t:‘2×10’},{n:‘Glute Bridge’,t:‘2×12’},{n:‘Copenhagen Plank’,t:‘2×20s e/s’}],
+cir:[{n:‘Row Erg’,t:‘200 m easy’},{n:‘Wall Balls (race wt)’,t:‘20 reps’},{n:‘KB Farmers Carry’,t:‘25 m’},{n:‘Burpee Broad Jumps’,t:‘8 reps’}]},
+fri:{d:‘Easy Jog + Strides (taper)’,segs:[{n:‘Easy Z1-Z2 jog’,t:‘20 min’},{n:‘2 × 100 m strides’,t:‘relaxed’}]},
+sat:{d:‘🏁 RACE DAY’,stas:[{n:‘🎿 SkiErg’,t:‘Race · 1000 m’},{n:‘🛷 Sled Push’,t:’+102 kg · 50 m’},{n:‘🔗 Sled Pull’,t:’+103 kg · 50 m’},{n:‘⚡ Burpee Broad Jumps’,t:‘80 reps’},{n:‘🚣 Row Erg’,t:‘Race · 1000 m’},{n:‘🏋️ Farmers Carry’,t:‘2×24 kg · 25 m’},{n:‘🎒 Sandbag Lunges’,t:‘20 kg · 25 m’},{n:‘🏀 Wall Balls’,t:‘4 kg · 100 reps’}]}
 }
+};
+
+const SKS=[‘ski’,‘push’,‘pull’,‘bbj’,‘row’,‘fc’,‘sb’,‘wb’];
+let W=1;
+
+function init(){
+bRpe(‘r-sat-ov’,‘sat_ov’);
+switchWeek(1);
+const d=G();
+if(d.ibD){const e=document.getElementById(‘ib’);if(e)e.style.display=‘none’;}
+}
+
+function closeIB(){
+document.getElementById(‘ib’).style.display=‘none’;
+const d=G();d.ibD=true;P(d);
+}
+
+function switchWeek(w){
+W=w;const c=WC[w];
+document.getElementById(‘mon-d’).textContent=c.mon.d;
+document.getElementById(‘fri-d’).textContent=c.fri.d;
+document.getElementById(‘sat-d’).textContent=c.sat.d;
+document.getElementById(‘tue-sl’).textContent=c.tue.sl;
+document.getElementById(‘tue-cl’).textContent=c.tue.cl;
+document.getElementById(‘thu-sl’).textContent=c.thu.sl;
+document.getElementById(‘thu-cl’).textContent=c.thu.cl;
+bSegs(‘mon’,c.mon.segs);
+bSegs(‘fri’,c.fri.segs);
+bStr(‘tue’,c.tue.str,c.tue.cir);
+bStr(‘thu’,c.thu.str,c.thu.cir);
+bSta(c.sat.stas);
+loadAll();
+}
+
+function bSegs(day,segs){
+const el=document.getElementById(`${day}-segs`);el.innerHTML=’’;
+segs.forEach((s,i)=>{
+const c=document.createElement(‘div’);c.className=‘rc’;
+c.innerHTML=`<div class="rc-h"><div class="rc-n">${s.n}</div><div class="rc-t">${s.t}</div></div> <div class="rf"> <div class="rff"><div class="lbl">Time</div><input class="inp ti" id="${day}-${i}-t" placeholder="mm:ss" oninput="fi(this)"/></div> <div class="rff"><div class="lbl">Pace /km</div><input class="inp" id="${day}-${i}-p" placeholder="5:30" oninput="fi(this)" style="width:68px"/></div> <div class="rff"><div class="lbl">HR bpm</div><input class="inp sm" id="${day}-${i}-hr" placeholder="150" oninput="fi(this)" inputmode="numeric"/></div> </div> <div class="rw"><span class="rl">RPE</span><div id="rr-${day}-${i}"></div></div>`;
+el.appendChild(c);
+bRpe(`rr-${day}-${i}`,`${day}_${i}`);
+});
+}
+
+function bStr(day,str,cir){
+const se=document.getElementById(`${day}-sc`);const ce=document.getElementById(`${day}-cc`);
+se.innerHTML=’’;ce.innerHTML=’’;
+str.forEach((ex,i)=>{
+const c=document.createElement(‘div’);c.className=‘exc’;
+c.innerHTML=`<div class="exc-h"><div class="exc-n">${ex.n}</div><div class="exc-t">${ex.t}</div></div> <div class="srow">${[1,2,3].map(s=>`
+<div class="sc"><div class="lbl">S${s} kg</div><input class="inp" id="${day}-s${s}-${i}-k" placeholder="kg" oninput="fi(this)" inputmode="decimal"/></div>
+<div class="sc"><div class="lbl">reps</div><input class="inp" id="${day}-s${s}-${i}-r" placeholder="—" oninput="fi(this)" inputmode="numeric"/></div>`).join('')} </div>`;
+se.appendChild(c);
+});
+cir.forEach((ex,i)=>{
+const rid=`rc-${day}-${i}`;
+const c=document.createElement(‘div’);c.className=‘exc’;
+c.innerHTML=`<div class="exc-h"><div class="exc-n">${ex.n}</div><div class="exc-t">${ex.t}</div></div> <div class="srow">${[1,2,3].map(r=>`<div class="sc"><div class="lbl">Round ${r}</div><input class="inp" id="${day}-c${r}-${i}" placeholder="—" oninput="fi(this)"/></div>`).join('')}</div> <div class="rw"><span class="rl">RPE</span><div id="${rid}"></div></div>`;
+ce.appendChild(c);
+bRpe(rid,`${day}_c${i}`);
+});
+}
+
+function bSta(stas){
+const el=document.getElementById(‘sat-stc’);el.innerHTML=’’;
+stas.forEach((s,i)=>{
+const k=SKS[i];const rid=`rs-${k}`;
+const c=document.createElement(‘div’);c.className=‘stc’;
+c.innerHTML=`<div class="stc-h"><div class="stc-n">${s.n}</div><div class="stc-t">${s.t}</div></div> <div class="stf"> <div class="rff"><div class="lbl">Round 1</div><input class="inp ti" id="sat-${k}-r1" placeholder="mm:ss" oninput="fi(this)"/></div> <div class="rff"><div class="lbl">Round 2</div><input class="inp ti" id="sat-${k}-r2" placeholder="mm:ss" oninput="fi(this)"/></div> <div class="rff"><div class="lbl">Weight</div><input class="inp sm" id="sat-${k}-wt" placeholder="kg" oninput="fi(this)" inputmode="decimal"/></div> </div> <div class="rw"><span class="rl">RPE</span><div id="${rid}"></div></div>`;
+el.appendChild(c);
+bRpe(rid,`sat_${k}`);
+});
+}
+
+function bRpe(elId,sk){
+const el=document.getElementById(elId);if(!el)return;el.innerHTML=’’;
+for(let v=6;v<=10;v++){
+const b=document.createElement(‘button’);b.className=‘rb’;b.textContent=v;b.dataset.v=v;
+b.onclick=()=>{
+el.querySelectorAll(’.rb’).forEach(x=>x.classList.toggle(‘on’,+x.dataset.v===v));
+const d=G();d[`w${W}_rpe_${sk}`]=v;P(d);
+};
+el.appendChild(b);
+}
+}
+
+function lRpes(){
+const d=G();
+document.querySelectorAll(’[id^=“rr-”],[id^=“rc-”],[id^=“rs-”],[id=“r-sat-ov”]’).forEach(el=>{
+const sk=el.id.replace(/^(rr-|rc-|rs-)/,’’).replace(’-sat-ov’,‘sat_ov’);
+const key=el.id.startsWith(‘r-sat-ov’)?‘sat_ov’:el.id.replace(‘rr-’,’’).replace(‘rc-’,’’).replace(‘rs-’,’’);
+const v=d[`w${W}_rpe_${key}`];
+el.querySelectorAll(’.rb’).forEach(b=>b.classList.toggle(‘on’,v&&+b.dataset.v===+v));
+});
+}
+
+function fi(el){el.classList.toggle(‘done’,el.value.trim()!==’’);}
+
+function gInputs(day){
+const p=document.getElementById(`p-${day}`);if(!p)return[];
+return[…p.querySelectorAll(‘input,textarea’)].filter(e=>e.id).map(e=>e.id);
+}
+
+function sv(day){
+const d=G();const k=`w${W}_${day}`;const s={};
+gInputs(day).forEach(id=>{const e=document.getElementById(id);if(e)s[id]=e.value;});
+d[k]=s;d[`${k}_ok`]=true;P(d);
+const sc=document.getElementById(`sc-${day}`);
+if(sc){sc.classList.add(‘on’);setTimeout(()=>sc.classList.remove(‘on’),2000);}
+}
+
+function loadAll(){
+const d=G();
+[‘mon’,‘tue’,‘wed’,‘thu’,‘fri’,‘sat’].forEach(day=>{
+const s=d[`w${W}_${day}`];
+gInputs(day).forEach(id=>{const e=document.getElementById(id);if(!e)return;e.value=(s&&s[id])||’’;fi(e);});
+});
+lRpes();
+}
+
+function sd(id,btn){
+document.querySelectorAll(’.pnl’).forEach(p=>p.classList.remove(‘on’));
+document.querySelectorAll(’.dt’).forEach(t=>t.classList.remove(‘on’));
+document.getElementById(`p-${id}`).classList.add(‘on’);
+btn.classList.add(‘on’);
+document.getElementById(‘scr’).scrollTop=0;
+if(id===‘prog’)renderProg();
+}
+
+function t2s(t){if(!t||t.includes(’-’)||!t.includes(’:’))return 99999;const p=t.split(’:’);return(+p[0]||0)*60+(+p[1]||0);}
+
+function renderProg(){
+const d=G();let sess=0;const ws=new Set();let bSki=null,bRow=null;
+for(let w=1;w<=4;w++){
+[‘mon’,‘tue’,‘thu’,‘fri’,‘sat’].forEach(day=>{if(d[`w${w}_${day}_ok`]){sess++;ws.add(w);}});
+const sat=d[`w${w}_sat`];
+if(sat){
+const ski=sat[‘sat-ski-r1’],row=sat[‘sat-row-r1’];
+if(ski&&ski.trim()&&!ski.includes(’-’)){if(!bSki||t2s(ski)<t2s(bSki))bSki=ski;}
+if(row&&row.trim()&&!row.includes(’-’)){if(!bRow||t2s(row)<t2s(bRow))bRow=row;}
+}
+}
+document.getElementById(‘ps-s’).textContent=sess;
+document.getElementById(‘ps-w’).textContent=ws.size;
+document.getElementById(‘ps-ski’).textContent=bSki||’—’;
+document.getElementById(‘ps-row’).textContent=bRow||’—’;
+
+// Strength
+const se=document.getElementById(‘p-str’);const em={};
+for(let w=1;w<=4;w++){
+[‘tue’,‘thu’].forEach(day=>{
+const cfg=WC[w][day].str;const s=d[`w${w}_${day}`];if(!s)return;
+cfg.forEach((ex,i)=>{
+if(!em[ex.n])em[ex.n]=[];
+const kg=Math.max(…[1,2,3].map(n=>parseFloat(s[`${day}-s${n}-${i}-k`])||0));
+if(kg>0)em[ex.n].push({w,kg});
+});
+});
+}
+const ee=Object.entries(em).filter(([,v])=>v.length>0);
+if(!ee.length){se.innerHTML=’<div class="empty">Log Tue/Thu to see strength progress.</div>’;}
+else{
+se.innerHTML=’’;
+ee.forEach(([name,vals])=>{
+const best=Math.max(…vals.map(v=>v.kg));const mx=best*1.15||100;
+const c=document.createElement(‘div’);c.className=‘pc’;
+c.innerHTML=`<div class="pc-h"><div class="pc-n">${name}</div><div class="pc-b">Best: ${best} kg</div></div> <div class="ch">${vals.map(v=>{const h=Math.round((v.kg/mx)*100);return`<div class="cbw"><div class="cb-v">${v.kg}</div><div class="cb" style="height:${h}%;background:var(--str)"></div><div class="cb-w">W${v.w}</div></div>`;}).join('')}</div>`;
+se.appendChild(c);
+});
+}
+
+// Run
+const re=document.getElementById(‘p-run’);
+const rdefs=[{lbl:‘Mon Main Run’,day:‘mon’,si:1},{lbl:‘Fri Key Interval’,day:‘fri’,si:1}];
+const rrows=rdefs.map(def=>{
+const entries=[];let best=null;
+for(let w=1;w<=4;w++){
+const s=d[`w${w}_${def.day}`];if(!s)continue;
+const pace=s[`${def.day}-${def.si}-p`];
+if(pace&&pace.trim()){entries.push({w,pace});if(!best||t2s(pace)<t2s(best))best=pace;}
+}
+return{…def,entries,best};
+}).filter(r=>r.entries.length>0);
+if(!rrows.length){re.innerHTML=’<div class="empty">Log Mon/Fri runs to see pace progress.</div>’;}
+else{
+re.innerHTML=’’;
+rrows.forEach(r=>{
+const div=document.createElement(‘div’);div.className=‘rr’;
+div.innerHTML=`<div class="rr-n">${r.lbl}<span class="rr-b">${r.best?'🏆 Best: '+r.best+'/km':''}</span></div> <div class="rchips">${r.entries.map(e=>`<div class="rchip"><div class="rchip-w">W${e.w}</div><div class="rchip-v ${e.pace===r.best?'b':''}">${e.pace}</div><div class="rchip-l">/km</div></div>`).join('')}</div>`;
+re.appendChild(div);
+});
+}
+
+// Stations
+const ste=document.getElementById(‘p-sta’);
+const strows=SKS.map((k,i)=>{
+const entries=[];let best=null;
+for(let w=1;w<=4;w++){
+const s=d[`w${w}_sat`];if(!s)continue;
+const t=s[`sat-${k}-r1`];
+if(t&&t.trim()&&!t.includes(’-’)){entries.push({w,t});if(!best||t2s(t)<t2s(best))best=t;}
+}
+return{k,n:WC[1].sat.stas[i].n,entries,best};
+}).filter(r=>r.entries.length>0);
+if(!strows.length){ste.innerHTML=’<div class="empty">Log Saturday stations to see progress.</div>’;}
+else{
+ste.innerHTML=’’;
+strows.forEach(r=>{
+const div=document.createElement(‘div’);div.className=‘sr’;
+div.innerHTML=`<div class="sr-n">${r.n}<span class="sr-b">${r.best?'🏆 '+r.best:''}</span></div> <div class="chips">${r.entries.map(e=>`<div class="chip"><div class="chip-w">W${e.w}</div><div class="chip-t ${e.t===r.best?'b':''}">${e.t}</div></div>`).join('')}</div>`;
+ste.appendChild(div);
+});
+}
+
+// AMRAP
+const ae=[];
+for(let w=1;w<=4;w++){const s=d[`w${w}_thu`];if(s&&s[‘thu-amrap’]&&s[‘thu-amrap’].trim())ae.push({w,r:parseFloat(s[‘thu-amrap’])});}
+const ac=document.getElementById(‘p-ac’);const ab=document.getElementById(‘p-ab’);
+if(!ae.length){ac.innerHTML=’<div class="empty">No AMRAP data yet.</div>’;ab.textContent=’’;}
+else{
+const best=Math.max(…ae.map(e=>e.r));const mx=best*1.15||10;
+ab.textContent=`Best: ${best} rounds`;
+ac.innerHTML=ae.map(e=>{const h=Math.round((e.r/mx)*100);return`<div class="cbw"><div class="cb-v">${e.r}</div><div class="cb" style="height:${h}%;background:var(--cir)"></div><div class="cb-w">W${e.w}</div></div>`;}).join(’’);
+}
+}
+
+function nuke(){if(!confirm(‘Delete ALL saved data?’))return;localStorage.removeItem(SK);location.reload();}
+if(‘serviceWorker’ in navigator)window.addEventListener(‘load’,()=>navigator.serviceWorker.register(’./sw.js’));
+init();
 </script>
+
 </body>
 </html>
