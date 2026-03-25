@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="HYROX Log"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>HYROX Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0a0a; --surface: #111; --card: #181818; --card2: #202020;
+  --border: #272727; --border2: #333;
+  --accent: #e8ff3b; --accent2: #ff4c3b; --text: #f0f0f0; --muted: #555; --muted2: #888;
+  --run: #3baaff; --strength: #ff7c3b; --circuit: #c97dff; --station: #e8ff3b; --green: #3bff9c;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; font-weight: 300; display: flex; flex-direction: column; }
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: calc(var(--safe-top) + 12px) 16px 12px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+  position: relative;
+}
+.topbar-title { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; text-transform: uppercase; }
+.topbar-title span { color: var(--accent); }
+.week-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--card2); border: 1px solid var(--border2);
+  border-radius: 20px; padding: 6px 14px;
+}
+.week-pill select {
+  background: none; border: none; color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700;
+  letter-spacing: 1px; cursor: pointer; appearance: none; -webkit-appearance: none;
+  padding-right: 4px;
+}
+.week-pill select:focus { outline: none; }
+.week-chevron { color: var(--muted); font-size: 12px; pointer-events: none; }
+
+/* ── SCROLL CONTENT ── */
+.scroll-area { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+
+/* ── DAY TABS ── */
+.day-tabs {
+  display: flex; overflow-x: auto; gap: 0;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: none; -ms-overflow-style: none;
+  flex-shrink: 0;
+}
+.day-tabs::-webkit-scrollbar { display: none; }
+.day-tab {
+  flex-shrink: 0; padding: 12px 16px;
+  background: none; border: none; border-bottom: 3px solid transparent;
+  color: var(--muted); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  cursor: pointer; transition: color 0.15s; white-space: nowrap;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.day-tab .dot { width: 6px; height: 6px; border-radius: 50%; }
+.day-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ── PANELS ── */
+.panel { display: none; padding: 16px; padding-bottom: calc(var(--safe-bottom) + 80px); }
+.panel.active { display: block; }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 10px; margin-top: 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sec-label:first-child { margin-top: 0; }
+.sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.sec-badge { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 2px 8px; border-radius: 2px; }
+.badge-strength { background: rgba(255,124,59,0.15); color: var(--strength); }
+.badge-circuit { background: rgba(201,125,255,0.15); color: var(--circuit); }
+.badge-run { background: rgba(59,170,255,0.15); color: var(--run); }
+.badge-station { background: rgba(232,255,59,0.1); color: var(--station); }
+
+/* ── EXERCISE CARD ── */
+.ex-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.ex-card-header { padding: 12px 14px 8px; display: flex; align-items: baseline; justify-content: space-between; }
+.ex-card-name { font-size: 15px; font-weight: 500; color: var(--text); }
+.ex-card-target { font-size: 11px; color: var(--muted2); font-family: 'Barlow Condensed', sans-serif; letter-spacing: 1px; }
+.sets-row { display: flex; gap: 8px; padding: 0 14px 12px; overflow-x: auto; scrollbar-width: none; }
+.sets-row::-webkit-scrollbar { display: none; }
+.set-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
+.set-col-label { font-size: 9px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+.set-inp {
+  width: 64px; height: 44px;
+  background: var(--card2); border: 1.5px solid var(--border2);
+  color: var(--text); border-radius: 8px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 17px; font-weight: 700;
+  text-align: center; -webkit-appearance: none;
+  transition: border-color 0.15s;
+}
+.set-inp:focus { outline: none; border-color: var(--accent); background: #252525; }
+.set-inp.done { border-color: rgba(59,255,156,0.5); color: var(--green); }
+.set-inp.time-inp { color: var(--station); width: 76px; font-size: 15px; }
+.set-inp.time-inp:focus { color: var(--text); }
+.set-inp::placeholder { color: #303030; }
+
+/* ── RPE ROW ── */
+.rpe-wrap { padding: 0 14px 12px; display: flex; align-items: center; gap: 6px; }
+.rpe-wrap-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-right: 2px; }
+.rpe-b {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1.5px solid var(--border2); background: none;
+  color: var(--muted); font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.1s; flex-shrink: 0;
+}
+.rpe-b.on { background: var(--accent); border-color: var(--accent); color: #000; }
+
+/* ── RUN SEGMENT ── */
+.run-seg { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; padding: 12px 14px; }
+.run-seg-name { font-size: 14px; font-weight: 500; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: baseline; }
+.run-seg-target { font-size: 11px; color: var(--muted2); font-family: 'Barlow Condensed', sans-serif; }
+.run-fields { display: flex; gap: 8px; flex-wrap: wrap; }
+.run-field { display: flex; flex-direction: column; gap: 4px; }
+.run-field-label { font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.run-field input { width: 76px; }
+
+/* ── STATION CARD ── */
+.station-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.station-card-header { padding: 12px 14px 0; display: flex; align-items: baseline; justify-content: space-between; }
+.station-name { font-size: 15px; font-weight: 500; }
+.station-target { font-size: 11px; color: var(--muted2); font-family: 'Barlow Condensed', sans-serif; }
+.station-fields { display: flex; gap: 8px; padding: 10px 14px 12px; flex-wrap: wrap; }
+
+/* ── NOTES ── */
+.notes-area {
+  width: 100%; background: var(--card); border: 1.5px solid var(--border);
+  color: var(--text); font-family: 'Barlow', sans-serif; font-size: 14px; font-weight: 300;
+  padding: 12px 14px; border-radius: 10px; resize: none; min-height: 72px;
+  -webkit-appearance: none;
+}
+.notes-area:focus { outline: none; border-color: var(--accent); background: #1c1c1c; }
+.notes-area::placeholder { color: var(--muted); }
+
+/* ── AMRAP TOTAL ── */
+.amrap-row { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; align-items: center; gap: 14px; }
+.amrap-row-label { font-size: 13px; color: var(--muted2); flex: 1; }
+.amrap-inp { width: 72px; height: 48px; font-size: 22px; }
+
+/* ── SAVE BUTTON ── */
+.save-btn {
+  width: 100%; padding: 16px;
+  background: var(--accent); color: #000;
+  border: none; border-radius: 10px;
+  font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 900;
+  letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
+  margin-top: 16px; transition: background 0.15s;
+  -webkit-appearance: none;
+}
+.save-btn:active { background: #d4eb2f; }
+.save-confirm { text-align: center; font-size: 13px; color: var(--green); letter-spacing: 1px; margin-top: 8px; height: 20px; opacity: 0; transition: opacity 0.3s; }
+.save-confirm.show { opacity: 1; }
+
+/* ── REST SCREEN ── */
+.rest-screen { text-align: center; padding: 48px 24px; }
+.rest-big { font-family: 'Barlow Condensed', sans-serif; font-size: 56px; font-weight: 900; color: var(--muted); margin-bottom: 12px; }
+.rest-subs { font-size: 13px; color: var(--muted); line-height: 2; }
+
+/* ── PROGRESS ── */
+.prog-stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.prog-stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+.prog-stat-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.prog-stat-val { font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 900; color: var(--accent); }
+
+.prog-ex { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.prog-ex-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.prog-ex-name { font-size: 14px; font-weight: 500; }
+.prog-ex-best { font-size: 12px; color: var(--green); }
+.prog-bars { display: flex; gap: 10px; align-items: flex-end; height: 56px; }
+.prog-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; height: 100%; justify-content: flex-end; }
+.prog-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; }
+.prog-bar-val { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; font-weight: 700; color: var(--muted2); }
+.prog-bar-wk { font-size: 9px; color: var(--muted); }
+
+.station-row { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.station-row-name { font-size: 14px; font-weight: 500; color: var(--station); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: baseline; }
+.station-row-best { font-size: 12px; color: var(--green); }
+.station-times { display: flex; gap: 8px; flex-wrap: wrap; }
+.st-time-chip { background: var(--card2); border: 1px solid var(--border2); border-radius: 6px; padding: 8px 12px; text-align: center; }
+.st-time-chip .wk { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.st-time-chip .tm { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; color: var(--station); line-height: 1.2; }
+.st-time-chip .tm.best { color: var(--green); }
+
+.amrap-prog-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+.amrap-chip { background: var(--card2); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 16px; text-align: center; }
+.amrap-chip .wk { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.amrap-chip .rds { font-family: 'Barlow Condensed', sans-serif; font-size: 32px; font-weight: 900; color: var(--circuit); line-height: 1; }
+.amrap-chip .rds.best { color: var(--green); }
+.amrap-chip .lbl { font-size: 10px; color: var(--muted); }
+
+.empty-state { font-size: 13px; color: var(--muted); padding: 16px 0; }
+
+.danger-btn { width: 100%; padding: 14px; background: rgba(255,76,59,0.1); color: var(--accent2); border: 1px solid rgba(255,76,59,0.2); border-radius: 10px; font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-top: 24px; }
+
+/* ── INSTALL BANNER ── */
+.install-banner {
+  background: rgba(232,255,59,0.08); border: 1px solid rgba(232,255,59,0.2);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.install-banner-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+.install-banner-text { font-size: 13px; color: #ccc; line-height: 1.6; }
+.install-banner-text strong { color: var(--accent); }
+.install-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 0 4px; flex-shrink: 0; }
+
+/* ── SCROLLBAR ── */
+.scroll-area::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-title">HYROX <span>Log</span></div>
+  <div class="week-pill">
+    <select id="weekSel" onchange="switchWeek(+this.value)">
+      <option value="1">W1 · Foundation</option>
+      <option value="2">W2 · Build</option>
+      <option value="3">W3 · Peak</option>
+      <option value="4">W4 · Taper</option>
+    </select>
+    <span class="week-chevron">▾</span>
+  </div>
+</div>
+
+<div class="day-tabs" id="dayTabs">
+  <button class="day-tab active" data-panel="mon" onclick="showDay('mon',this)">
+    <span class="dot" style="background:var(--run)"></span>Mon
+  </button>
+  <button class="day-tab" data-panel="tue" onclick="showDay('tue',this)">
+    <span class="dot" style="background:var(--circuit)"></span>Tue
+  </button>
+  <button class="day-tab" data-panel="wed" onclick="showDay('wed',this)">
+    <span class="dot" style="background:var(--muted)"></span>Wed
+  </button>
+  <button class="day-tab" data-panel="thu" onclick="showDay('thu',this)">
+    <span class="dot" style="background:var(--circuit)"></span>Thu
+  </button>
+  <button class="day-tab" data-panel="fri" onclick="showDay('fri',this)">
+    <span class="dot" style="background:var(--run)"></span>Fri
+  </button>
+  <button class="day-tab" data-panel="sat" onclick="showDay('sat',this)">
+    <span class="dot" style="background:var(--station)"></span>Sat
+  </button>
+  <button class="day-tab" data-panel="prog" onclick="showDay('prog',this)">
+    <span class="dot" style="background:var(--green)"></span>Progress
+  </button>
+</div>
+
+<div class="scroll-area" id="scrollArea">
+
+<!-- MON -->
+<div class="panel active" id="panel-mon">
+  <div id="install-hint" class="install-banner">
+    <div class="install-banner-icon">📲</div>
+    <div class="install-banner-text">
+      <strong>Add to Home Screen</strong> — tap the Share button in Safari, then "Add to Home Screen" to use this as an app that works offline.
+    </div>
+    <button class="install-close" onclick="closeInstallHint()">✕</button>
+  </div>
+
+  <div class="sec-label"><span class="sec-badge badge-run">Run</span><span id="mon-desc">Aerobic Base Run</span></div>
+
+  <div class="run-seg">
+    <div class="run-seg-name">Warm-up jog <span class="run-seg-target">8 min</span></div>
+    <div class="run-fields">
+      <div class="run-field"><div class="run-field-label">Time</div><input class="set-inp time-inp" id="mon-wu-t" placeholder="08:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">HR bpm</div><input class="set-inp" id="mon-wu-hr" placeholder="130" oninput="fi(this)"/></div>
+    </div>
+    <div class="rpe-wrap"><span class="rpe-wrap-label">RPE</span><div id="r-mon-wu" class="rpe-inline"></div></div>
+  </div>
+
+  <div class="run-seg">
+    <div class="run-seg-name" id="mon-main-lbl">Z2 Run <span class="run-seg-target" id="mon-main-tgt">4 km</span></div>
+    <div class="run-fields">
+      <div class="run-field"><div class="run-field-label">Time</div><input class="set-inp time-inp" id="mon-main-t" placeholder="24:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">Pace /km</div><input class="set-inp" id="mon-main-pace" placeholder="6:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">HR bpm</div><input class="set-inp" id="mon-main-hr" placeholder="140" oninput="fi(this)"/></div>
+    </div>
+    <div class="rpe-wrap"><span class="rpe-wrap-label">RPE</span><div id="r-mon-main" class="rpe-inline"></div></div>
+  </div>
+
+  <div class="run-seg">
+    <div class="run-seg-name">Strides <span class="run-seg-target" id="mon-str-tgt">4 × 100 m</span></div>
+    <div class="run-fields">
+      <div class="run-field"><div class="run-field-label">Pace /km</div><input class="set-inp" id="mon-str-pace" placeholder="4:30" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">HR bpm</div><input class="set-inp" id="mon-str-hr" placeholder="165" oninput="fi(this)"/></div>
+    </div>
+    <div class="rpe-wrap"><span class="rpe-wrap-label">RPE</span><div id="r-mon-str" class="rpe-inline"></div></div>
+  </div>
+
+  <div class="sec-label"><span class="sec-badge badge-run">Notes</span></div>
+  <textarea class="notes-area" id="n-mon" placeholder="How did it feel? Knee issues? Pace notes..."></textarea>
+  <button class="save-btn" onclick="save('mon')">Save Monday</button>
+  <div class="save-confirm" id="sc-mon">✓ Saved</div>
+</div>
+
+<!-- TUE -->
+<div class="panel" id="panel-tue">
+  <div class="sec-label"><span class="sec-badge badge-strength">A — Strength</span><span id="tue-str-note">3 sets · 90s rest</span></div>
+  <div id="tue-strength-cards"></div>
+
+  <div class="sec-label"><span class="sec-badge badge-circuit">B — HYROX Circuit</span><span id="tue-cir-note">2 rounds</span></div>
+  <div id="tue-circuit-cards"></div>
+
+  <div class="amrap-row" style="margin-top:4px;">
+    <div class="amrap-row-label">AMRAP rounds completed</div>
+    <input class="set-inp amrap-inp" id="tue-amrap" placeholder="0" oninput="fi(this)"/>
+  </div>
+
+  <div class="sec-label"><span class="sec-badge badge-circuit">Notes</span></div>
+  <textarea class="notes-area" id="n-tue" placeholder="Energy, PBs, what to improve..."></textarea>
+  <button class="save-btn" onclick="save('tue')">Save Tuesday</button>
+  <div class="save-confirm" id="sc-tue">✓ Saved</div>
+</div>
+
+<!-- WED -->
+<div class="panel" id="panel-wed">
+  <div class="rest-screen">
+    <div class="rest-big">REST</div>
+    <div class="rest-subs">
+      Foam roll TFL · Hip flexor stretch<br/>
+      Glute activation · Sleep 8+ hrs<br/>
+      Recovery is training.
+    </div>
+  </div>
+  <div class="sec-label"><span class="sec-badge badge-run">Notes</span></div>
+  <textarea class="notes-area" id="n-wed" placeholder="Body feel, sleep quality, soreness..."></textarea>
+  <button class="save-btn" onclick="save('wed')">Save Notes</button>
+  <div class="save-confirm" id="sc-wed">✓ Saved</div>
+</div>
+
+<!-- THU -->
+<div class="panel" id="panel-thu">
+  <div class="sec-label"><span class="sec-badge badge-strength">A — Strength</span><span id="thu-str-note">3 sets · 90s rest</span></div>
+  <div id="thu-strength-cards"></div>
+
+  <div class="sec-label"><span class="sec-badge badge-circuit">B — HYROX AMRAP</span><span id="thu-cir-note">10 min</span></div>
+  <div id="thu-circuit-cards"></div>
+
+  <div class="amrap-row">
+    <div class="amrap-row-label">Total AMRAP rounds — beat last week!</div>
+    <input class="set-inp amrap-inp" id="thu-amrap" placeholder="0" oninput="fi(this)"/>
+  </div>
+
+  <div class="sec-label"><span class="sec-badge badge-circuit">Notes</span></div>
+  <textarea class="notes-area" id="n-thu" placeholder="AMRAP score, weights, how it felt..."></textarea>
+  <button class="save-btn" onclick="save('thu')">Save Thursday</button>
+  <div class="save-confirm" id="sc-thu">✓ Saved</div>
+</div>
+
+<!-- FRI -->
+<div class="panel" id="panel-fri">
+  <div class="sec-label"><span class="sec-badge badge-run">Run</span><span id="fri-desc">Threshold Intervals</span></div>
+
+  <div class="run-seg">
+    <div class="run-seg-name">Warm-up <span class="run-seg-target">8 min easy</span></div>
+    <div class="run-fields">
+      <div class="run-field"><div class="run-field-label">Time</div><input class="set-inp time-inp" id="fri-wu" placeholder="08:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">HR bpm</div><input class="set-inp" id="fri-wu-hr" placeholder="130" oninput="fi(this)"/></div>
+    </div>
+    <div class="rpe-wrap"><span class="rpe-wrap-label">RPE</span><div id="r-fri-wu" class="rpe-inline"></div></div>
+  </div>
+
+  <div class="run-seg">
+    <div class="run-seg-name" id="fri-i1l">Interval 1 <span class="run-seg-target" id="fri-i1t">1 km threshold</span></div>
+    <div class="run-fields">
+      <div class="run-field"><div class="run-field-label">Time</div><input class="set-inp time-inp" id="fri-i1" placeholder="05:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">Pace /km</div><input class="set-inp" id="fri-i1p" placeholder="5:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">HR bpm</div><input class="set-inp" id="fri-i1hr" placeholder="170" oninput="fi(this)"/></div>
+    </div>
+    <div class="rpe-wrap"><span class="rpe-wrap-label">RPE</span><div id="r-fri-i1" class="rpe-inline"></div></div>
+  </div>
+
+  <div class="run-seg">
+    <div class="run-seg-name" id="fri-i2l">Interval 2 <span class="run-seg-target" id="fri-i2t">1 km threshold</span></div>
+    <div class="run-fields">
+      <div class="run-field"><div class="run-field-label">Time</div><input class="set-inp time-inp" id="fri-i2" placeholder="05:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">Pace /km</div><input class="set-inp" id="fri-i2p" placeholder="5:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">HR bpm</div><input class="set-inp" id="fri-i2hr" placeholder="170" oninput="fi(this)"/></div>
+    </div>
+    <div class="rpe-wrap"><span class="rpe-wrap-label">RPE</span><div id="r-fri-i2" class="rpe-inline"></div></div>
+  </div>
+
+  <div class="run-seg" id="fri-i3-seg">
+    <div class="run-seg-name">Interval 3 <span class="run-seg-target" id="fri-i3t">1 km threshold</span></div>
+    <div class="run-fields">
+      <div class="run-field"><div class="run-field-label">Time</div><input class="set-inp time-inp" id="fri-i3" placeholder="05:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">Pace /km</div><input class="set-inp" id="fri-i3p" placeholder="5:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">HR bpm</div><input class="set-inp" id="fri-i3hr" placeholder="170" oninput="fi(this)"/></div>
+    </div>
+    <div class="rpe-wrap"><span class="rpe-wrap-label">RPE</span><div id="r-fri-i3" class="rpe-inline"></div></div>
+  </div>
+
+  <div class="run-seg">
+    <div class="run-seg-name">Cool-down <span class="run-seg-target">5 min easy</span></div>
+    <div class="run-fields">
+      <div class="run-field"><div class="run-field-label">Time</div><input class="set-inp time-inp" id="fri-cd" placeholder="05:00" oninput="fi(this)"/></div>
+      <div class="run-field"><div class="run-field-label">HR bpm</div><input class="set-inp" id="fri-cd-hr" placeholder="120" oninput="fi(this)"/></div>
+    </div>
+  </div>
+
+  <div class="sec-label"><span class="sec-badge badge-run">Notes</span></div>
+  <textarea class="notes-area" id="n-fri" placeholder="Pace splits, HR zones, how threshold felt..."></textarea>
+  <button class="save-btn" onclick="save('fri')">Save Friday</button>
+  <div class="save-confirm" id="sc-fri">✓ Saved</div>
+</div>
+
+<!-- SAT -->
+<div class="panel" id="panel-sat">
+  <div class="sec-label"><span class="sec-badge badge-station">Stations</span><span id="sat-desc">Log time per station + RPE</span></div>
+
+  <div id="sat-station-cards"></div>
+
+  <div class="station-card" style="margin-bottom:10px;">
+    <div class="station-card-header"><div class="station-name">⏱ Total Session</div></div>
+    <div class="station-fields">
+      <div class="run-field"><div class="run-field-label">Total Time</div><input class="set-inp time-inp" id="sat-total" placeholder="mm:ss" oninput="fi(this)"/></div>
+    </div>
+    <div class="rpe-wrap"><span class="rpe-wrap-label">Overall RPE</span><div id="r-sat-overall" class="rpe-inline"></div></div>
+  </div>
+
+  <div class="sec-label"><span class="sec-badge badge-station">Notes</span></div>
+  <textarea class="notes-area" id="n-sat" placeholder="Weakest station? Sled weight? Technique notes..."></textarea>
+  <button class="save-btn" onclick="save('sat')">Save Saturday</button>
+  <div class="save-confirm" id="sc-sat">✓ Saved</div>
+</div>
+
+<!-- PROGRESS -->
+<div class="panel" id="panel-prog">
+  <div class="sec-label">Overview</div>
+  <div class="prog-stat-row">
+    <div class="prog-stat"><div class="prog-stat-label">Sessions Logged</div><div class="prog-stat-val" id="p-sessions">0</div></div>
+    <div class="prog-stat"><div class="prog-stat-label">Weeks Active</div><div class="prog-stat-val" id="p-weeks">0</div></div>
+    <div class="prog-stat"><div class="prog-stat-label">Best SkiErg 1km</div><div class="prog-stat-val" id="p-ski" style="font-size:20px">—</div></div>
+    <div class="prog-stat"><div class="prog-stat-label">Best Row 1km</div><div class="prog-stat-val" id="p-row" style="font-size:20px">—</div></div>
+  </div>
+
+  <div class="sec-label">Strength Progress</div>
+  <div id="p-strength-cards"><div class="empty-state">Log Tue/Thu sessions to see progress.</div></div>
+
+  <div class="sec-label">Station Times</div>
+  <div id="p-station-rows"><div class="empty-state">Log Saturday sessions to see progress.</div></div>
+
+  <div class="sec-label">Thu AMRAP Rounds</div>
+  <div class="prog-ex">
+    <div class="prog-ex-header"><div class="prog-ex-name">AMRAP Progress</div><div class="prog-ex-best" id="p-amrap-best"></div></div>
+    <div class="amrap-prog-row" id="p-amrap-chips"><div class="empty-state">No data yet.</div></div>
+  </div>
+
+  <button class="danger-btn" onclick="nuke()">Clear All Data</button>
+</div>
+
+</div><!-- scroll-area -->
+
+<script>
+// ══════════════════ DATA ══════════════════
+const SK = 'hyrox_pwa_v1';
+const get = () => { try { return JSON.parse(localStorage.getItem(SK)) || {}; } catch { return {}; } };
+const put = d => localStorage.setItem(SK, JSON.stringify(d));
+
+// ══════════════════ WEEK CONFIG ══════════════════
+const WC = {
+  1: {
+    mon: { desc:'Aerobic Base Run', mainLbl:'Z2 Run', mainTgt:'4 km', strTgt:'4 × 100 m strides' },
+    tue: { strNote:'3 sets · 90s rest · RPE 8/10', cirNote:'2 rounds · 90s rest',
+      str:[{n:'Back Squat',t:'3×5 @80%'},{n:'Bent-over Row',t:'3×6'},{n:'DB Bench Press',t:'3×8'},{n:'Copenhagen Plank',t:'3×20s e/s'}],
+      cir:[{n:'SkiErg',t:'200 m'},{n:'Wall Balls (race wt)',t:'15 reps'},{n:'Burpee Broad Jumps',t:'8 reps'},{n:'KB Farmers Carry',t:'25 m'}] },
+    thu: { strNote:'3 sets · 90s rest · RPE 8/10', cirNote:'AMRAP 10 min',
+      str:[{n:'Trap Bar Deadlift',t:'3×5 @80%'},{n:'Weighted Pull-ups',t:'3×6'},{n:'DB Romanian DL',t:'3×10'},{n:'Copenhagen Plank',t:'3×20s e/s'}],
+      cir:[{n:'Row Erg',t:'200 m'},{n:'Sandbag Lunges',t:'25 m'},{n:'Burpee Broad Jumps',t:'8 reps'},{n:'Wall Balls (race wt)',t:'12 reps'}] },
+    fri: { desc:'Threshold Intervals', i1t:'1 km threshold', i2t:'1 km threshold', i3t:'1 km threshold' },
+    sat: { desc:'Technique Day · no time pressure', stations:[
+      {n:'🎿 SkiErg',t:'1000 m easy'},{n:'🛷 Sled Push',t:'25 m light'},{n:'🔗 Sled Pull',t:'25 m light'},
+      {n:'⚡ Burpee Broad Jumps',t:'20 reps'},{n:'🚣 Row Erg',t:'1000 m easy'},
+      {n:'🏋️ Farmers Carry',t:'1 × 25 m'},{n:'🎒 Sandbag Lunges',t:'1 × 25 m'},{n:'🏀 Wall Balls',t:'50 reps'} ] }
+  },
+  2: {
+    mon: { desc:'Race Pace Intervals', mainLbl:'5 × 1 km @ race pace', mainTgt:'5 km', strTgt:'90s rest between' },
+    tue: { strNote:'3 sets · 90s rest · RPE 8/10', cirNote:'3 rounds · run-embedded',
+      str:[{n:'Back Squat',t:'3×4 @85%'},{n:'Weighted Pull-ups',t:'3×5'},{n:'Romanian Deadlift',t:'3×8'},{n:'Back Extension',t:'3×12'}],
+      cir:[{n:'400m run → SkiErg',t:'200 m no rest'},{n:'Wall Balls (race wt)',t:'15 reps'},{n:'Burpee Broad Jumps',t:'8 reps'}] },
+    thu: { strNote:'3 sets · 90s rest · RPE 8/10', cirNote:'AMRAP 12 min',
+      str:[{n:'Trap Bar Deadlift',t:'3×4 @85%'},{n:'Bulgarian Split Squat',t:'3×8 e/s'},{n:'DB Bench Press',t:'3×8'},{n:'Single-leg RDL',t:'3×8 e/s'}],
+      cir:[{n:'Row Erg',t:'200 m'},{n:'KB Farmers Carry',t:'50 m'},{n:'Burpee Broad Jumps',t:'8 reps'},{n:'Wall Balls (race wt)',t:'12 reps'}] },
+    fri: { desc:'Progressive Tempo', i1t:'2 km Z2', i2t:'2 km threshold', i3t:'— ' },
+    sat: { desc:'Timed Station Block · 2 rounds · record splits', stations:[
+      {n:'🎿 SkiErg',t:'1000 m timed'},{n:'🛷 Sled Push',t:'50 m mod wt'},{n:'🔗 Sled Pull',t:'50 m mod wt'},
+      {n:'⚡ Burpee Broad Jumps',t:'30 reps'},{n:'🚣 Row Erg',t:'1000 m timed'},
+      {n:'🏋️ Farmers Carry',t:'50 m'},{n:'🎒 Sandbag Lunges',t:'25 m'},{n:'🏀 Wall Balls',t:'75 reps'} ] }
+  },
+  3: {
+    mon: { desc:'Peak Race Pace Intervals', mainLbl:'6 × 1 km @ race pace', mainTgt:'6 km', strTgt:'90s rest' },
+    tue: { strNote:'3 sets · 90s rest · RPE 9/10', cirNote:'3 rounds · race weights',
+      str:[{n:'Back Squat',t:'3×3 @88-90%'},{n:'Weighted Pull-ups',t:'3×4'},{n:'Trap Bar Deadlift',t:'3×3 @88%'},{n:'Hollow Body Hold',t:'3×30s'}],
+      cir:[{n:'400m run → SkiErg',t:'200 m no rest'},{n:'Wall Balls (race wt)',t:'20 reps'},{n:'KB Lunges (race wt)',t:'25 m'},{n:'Burpee Broad Jumps',t:'10 reps'}] },
+    thu: { strNote:'3 sets · 90s rest · RPE 9/10', cirNote:'AMRAP 15 min · race weights',
+      str:[{n:'Trap Bar Deadlift',t:'3×3 @88%'},{n:'Bulgarian Split Squat',t:'3×6 e/s'},{n:'DB Bench Press',t:'3×6'},{n:'Copenhagen Plank',t:'3×25s e/s'}],
+      cir:[{n:'Row Erg',t:'200 m hard'},{n:'Sandbag Lunges',t:'25 m'},{n:'Burpee Broad Jumps',t:'10 reps'},{n:'KB Farmers Carry',t:'50 m'},{n:'Wall Balls (race wt)',t:'12 reps'}] },
+    fri: { desc:'Race Pace Intervals (peak)', i1t:'1 km @race pace', i2t:'1 km @race pace', i3t:'1 km @race pace' },
+    sat: { desc:'Half Simulation · 4 runs + 4 stations · race weights', stations:[
+      {n:'🎿 SkiErg',t:'1000 m race pace'},{n:'🛷 Sled Push',t:'50 m +102 kg'},{n:'🔗 Sled Pull',t:'50 m +103 kg'},
+      {n:'⚡ Burpee Broad Jumps',t:'80 reps'},{n:'🚣 Row Erg',t:'— (sim only 4 stations)'},
+      {n:'🏋️ Farmers Carry',t:'—'},{n:'🎒 Sandbag Lunges',t:'—'},{n:'🏀 Wall Balls',t:'—'} ] }
+  },
+  4: {
+    mon: { desc:'Taper Sharpener', mainLbl:'4 × 1 km @ race pace', mainTgt:'4 km', strTgt:'2 min rest' },
+    tue: { strNote:'2 sets · taper', cirNote:'2 rounds only',
+      str:[{n:'Back Squat',t:'2×4 @75%'},{n:'Pull-ups (BW)',t:'2×6'},{n:'Romanian DL (light)',t:'2×8'},{n:'Dead Bug',t:'2×10 e/s'}],
+      cir:[{n:'SkiErg',t:'200 m easy'},{n:'Wall Balls (race wt)',t:'15 reps'},{n:'Burpee Broad Jumps',t:'8 reps'},{n:'KB Farmers Carry',t:'25 m'}] },
+    thu: { strNote:'2 sets · activation', cirNote:'1 round only',
+      str:[{n:'Goblet Squat',t:'2×10 light'},{n:'DB Row',t:'2×10'},{n:'Glute Bridge',t:'2×12'},{n:'Copenhagen Plank',t:'2×20s e/s'}],
+      cir:[{n:'Row Erg',t:'200 m easy'},{n:'Wall Balls (race wt)',t:'20 reps'},{n:'KB Farmers Carry',t:'25 m'},{n:'Burpee Broad Jumps',t:'8 reps'}] },
+    fri: { desc:'Easy Jog + Strides (taper)', i1t:'Strides 100 m', i2t:'Strides 100 m', i3t:'—' },
+    sat: { desc:'🏁 RACE DAY', stations:[
+      {n:'🎿 SkiErg',t:'Race — 1000 m'},{n:'🛷 Sled Push',t:'+102 kg · 50 m'},{n:'🔗 Sled Pull',t:'+103 kg · 50 m'},
+      {n:'⚡ Burpee Broad Jumps',t:'80 reps'},{n:'🚣 Row Erg',t:'Race — 1000 m'},
+      {n:'🏋️ Farmers Carry',t:'2×24 kg · 25 m'},{n:'🎒 Sandbag Lunges',t:'20 kg · 25 m'},{n:'🏀 Wall Balls',t:'4 kg · 100 reps'} ] }
+  }
+};
+
+let W = 1;
+
+// ══════════════════ INIT ══════════════════
+function init() {
+  buildRpes();
+  buildSatCards();
+  switchWeek(1);
+  const d = get();
+  if (d.installDismissed) document.getElementById('install-hint').style.display = 'none';
+}
+
+function closeInstallHint() {
+  document.getElementById('install-hint').style.display = 'none';
+  const d = get(); d.installDismissed = true; put(d);
+}
+
+// ══════════════════ RPE ══════════════════
+const RPE_IDS = ['r-mon-wu','r-mon-main','r-mon-str','r-fri-wu','r-fri-i1','r-fri-i2','r-fri-i3','r-sat-overall'];
+
+function buildRpes() {
+  RPE_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) buildRpeEl(el, id);
+  });
+}
+
+function buildRpeEl(el, id) {
+  el.className = 'rpe-wrap'; // reuse style
+  el.style.display = 'flex'; el.style.gap = '6px';
+  for (let v = 6; v <= 10; v++) {
+    const b = document.createElement('button');
+    b.className = 'rpe-b'; b.textContent = v; b.dataset.v = v;
+    b.onclick = () => {
+      el.querySelectorAll('.rpe-b').forEach(x => x.classList.toggle('on', +x.dataset.v === v));
+      const d = get(); d[`w${W}_rpe_${id}`] = v; put(d);
+    };
+    el.appendChild(b);
+  }
+}
+
+function buildInlineRpe(containerId, storeKey) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = '';
+  for (let v = 6; v <= 10; v++) {
+    const b = document.createElement('button');
+    b.className = 'rpe-b'; b.textContent = v; b.dataset.v = v;
+    b.onclick = () => {
+      el.querySelectorAll('.rpe-b').forEach(x => x.classList.toggle('on', +x.dataset.v === v));
+      const d = get(); d[`w${W}_rpe_${storeKey}`] = v; put(d);
+    };
+    el.appendChild(b);
+  }
+}
+
+function loadRpes() {
+  const d = get();
+  RPE_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = d[`w${W}_rpe_${id}`];
+    el.querySelectorAll('.rpe-b').forEach(b => b.classList.toggle('on', v && +b.dataset.v === +v));
+  });
+  // inline (strength/circuit rows loaded dynamically)
+}
+
+// ══════════════════ WEEK SWITCH ══════════════════
+function switchWeek(w) {
+  W = w;
+  const cfg = WC[w];
+
+  // Mon
+  document.getElementById('mon-desc').textContent = cfg.mon.desc;
+  document.getElementById('mon-main-lbl').childNodes[0].textContent = cfg.mon.mainLbl + ' ';
+  document.getElementById('mon-main-tgt').textContent = cfg.mon.mainTgt;
+  document.getElementById('mon-str-tgt').textContent = cfg.mon.strTgt;
+
+  // Tue
+  document.getElementById('tue-str-note').textContent = cfg.tue.strNote;
+  document.getElementById('tue-cir-note').textContent = cfg.tue.cirNote;
+  buildStrCards('tue', cfg.tue.str, cfg.tue.cir);
+
+  // Thu
+  document.getElementById('thu-str-note').textContent = cfg.thu.strNote;
+  document.getElementById('thu-cir-note').textContent = cfg.thu.cirNote;
+  buildStrCards('thu', cfg.thu.str, cfg.thu.cir);
+
+  // Fri
+  document.getElementById('fri-desc').textContent = cfg.fri.desc;
+  document.getElementById('fri-i1t').textContent = cfg.fri.i1t;
+  document.getElementById('fri-i2t').textContent = cfg.fri.i2t;
+  document.getElementById('fri-i3t').textContent = cfg.fri.i3t;
+  document.getElementById('fri-i3-seg').style.display = cfg.fri.i3t === '— ' ? 'none' : '';
+
+  // Sat
+  document.getElementById('sat-desc').textContent = cfg.sat.desc;
+  buildSatCards();
+
+  loadSession();
+  loadRpes();
+}
+
+// ══════════════════ STRENGTH / CIRCUIT CARDS ══════════════════
+function buildStrCards(day, str, cir) {
+  const strEl = document.getElementById(`${day}-strength-cards`);
+  const cirEl = document.getElementById(`${day}-circuit-cards`);
+  strEl.innerHTML = ''; cirEl.innerHTML = '';
+
+  str.forEach((ex, i) => {
+    const card = document.createElement('div');
+    card.className = 'ex-card';
+    card.innerHTML = `
+      <div class="ex-card-header">
+        <div class="ex-card-name">${ex.n}</div>
+        <div class="ex-card-target">${ex.t}</div>
+      </div>
+      <div class="sets-row">
+        ${[1,2,3].map(s => `
+          <div class="set-col">
+            <div class="set-col-label">S${s} kg</div>
+            <input class="set-inp" id="${day}-s${s}-${i}-kg" placeholder="kg" oninput="fi(this)" inputmode="decimal"/>
+            <div class="set-col-label">reps</div>
+            <input class="set-inp" id="${day}-s${s}-${i}-rp" placeholder="—" oninput="fi(this)" inputmode="numeric"/>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    strEl.appendChild(card);
+  });
+
+  cir.forEach((ex, i) => {
+    const card = document.createElement('div');
+    card.className = 'ex-card';
+    const rpeId = `r-${day}-c${i}`;
+    card.innerHTML = `
+      <div class="ex-card-header">
+        <div class="ex-card-name">${ex.n}</div>
+        <div class="ex-card-target">${ex.t}</div>
+      </div>
+      <div class="sets-row">
+        ${[1,2,3].map(r => `
+          <div class="set-col">
+            <div class="set-col-label">Round ${r}</div>
+            <input class="set-inp" id="${day}-c${r}-${i}" placeholder="—" oninput="fi(this)"/>
+          </div>
+        `).join('')}
+      </div>
+      <div class="rpe-wrap"><span class="rpe-wrap-label">RPE</span><div id="${rpeId}"></div></div>
+    `;
+    cirEl.appendChild(card);
+    buildInlineRpe(rpeId, `${day}_c${i}`);
+  });
+}
+
+// ══════════════════ STATION CARDS ══════════════════
+const SAT_IDS = ['ski','push','pull','bbj','row','fc','sb','wb'];
+
+function buildSatCards() {
+  const stations = WC[W].sat.stations;
+  const el = document.getElementById('sat-station-cards');
+  el.innerHTML = '';
+  stations.forEach((st, i) => {
+    const id = SAT_IDS[i];
+    const rpeId = `r-sat-${id}`;
+    const card = document.createElement('div');
+    card.className = 'station-card';
+    card.innerHTML = `
+      <div class="station-card-header">
+        <div class="station-name">${st.n}</div>
+        <div class="station-target">${st.t}</div>
+      </div>
+      <div class="station-fields">
+        <div class="run-field"><div class="run-field-label">Round 1</div><input class="set-inp time-inp" id="sat-${id}-r1" placeholder="mm:ss" oninput="fi(this)"/></div>
+        <div class="run-field"><div class="run-field-label">Round 2</div><input class="set-inp time-inp" id="sat-${id}-r2" placeholder="mm:ss" oninput="fi(this)"/></div>
+        <div class="run-field"><div class="run-field-label">Weight</div><input class="set-inp" id="sat-${id}-wt" placeholder="kg" oninput="fi(this)" inputmode="decimal" style="width:64px"/></div>
+      </div>
+      <div class="rpe-wrap"><span class="rpe-wrap-label">RPE</span><div id="${rpeId}"></div></div>
+    `;
+    el.appendChild(card);
+    buildInlineRpe(rpeId, `sat_${id}`);
+  });
+}
+
+// ══════════════════ FILL INDICATOR ══════════════════
+function fi(el) { el.classList.toggle('done', el.value.trim() !== ''); }
+
+// ══════════════════ COLLECT ALL INPUT IDS ══════════════════
+function getPanelInputs(day) {
+  const p = document.getElementById(`panel-${day}`);
+  if (!p) return [];
+  return [...p.querySelectorAll('input, textarea')].filter(e => e.id).map(e => e.id);
+}
+
+// ══════════════════ SAVE ══════════════════
+function save(day) {
+  const d = get();
+  const k = `w${W}_${day}`;
+  const s = {};
+  getPanelInputs(day).forEach(id => { const e = document.getElementById(id); if (e) s[id] = e.value; });
+  d[k] = s; d[`${k}_ok`] = true;
+  put(d);
+  const sc = document.getElementById(`sc-${day}`);
+  if (sc) { sc.classList.add('show'); setTimeout(() => sc.classList.remove('show'), 2000); }
+}
+
+// ══════════════════ LOAD ══════════════════
+function loadSession() {
+  const d = get();
+  ['mon','tue','wed','thu','fri','sat'].forEach(day => {
+    const s = d[`w${W}_${day}`];
+    getPanelInputs(day).forEach(id => {
+      const e = document.getElementById(id);
+      if (!e) return;
+      e.value = (s && s[id]) ? s[id] : '';
+      fi(e);
+    });
+    // inline circuit rpes
+    ['tue','thu'].forEach(dy => {
+      for (let i = 0; i < 6; i++) {
+        const el = document.getElementById(`r-${dy}-c${i}`);
+        if (!el) continue;
+        const v = d[`w${W}_rpe_${dy}_c${i}`];
+        el.querySelectorAll('.rpe-b').forEach(b => b.classList.toggle('on', v && +b.dataset.v === +v));
+      }
+    });
+    // sat inline rpes
+    SAT_IDS.forEach(id => {
+      const el = document.getElementById(`r-sat-${id}`);
+      if (!el) return;
+      const v = d[`w${W}_rpe_sat_${id}`];
+      el.querySelectorAll('.rpe-b').forEach(b => b.classList.toggle('on', v && +b.dataset.v === +v));
+    });
+  });
+}
+
+// ══════════════════ DAY NAV ══════════════════
+function showDay(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.day-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`panel-${id}`).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('scrollArea').scrollTop = 0;
+  if (id === 'prog') renderProgress();
+}
+
+// ══════════════════ PROGRESS ══════════════════
+function t2s(t) { if (!t || t.includes('-')) return 99999; const p = t.split(':'); return (+p[0]||0)*60+(+p[1]||0); }
+
+function renderProgress() {
+  const d = get();
+  let sessions = 0; const weeksSet = new Set();
+  let bestSki = null, bestRow = null;
+
+  for (let w = 1; w <= 4; w++) {
+    ['mon','tue','thu','fri','sat'].forEach(day => {
+      if (d[`w${w}_${day}_ok`]) { sessions++; weeksSet.add(w); }
+    });
+    const sat = d[`w${w}_sat`];
+    if (sat) {
+      const ski = sat['sat-ski-r1']; const row = sat['sat-row-r1'];
+      if (ski && ski.trim() && !ski.includes('-')) { if (!bestSki || t2s(ski) < t2s(bestSki)) bestSki = ski; }
+      if (row && row.trim() && !row.includes('-')) { if (!bestRow || t2s(row) < t2s(bestRow)) bestRow = row; }
+    }
+  }
+
+  document.getElementById('p-sessions').textContent = sessions;
+  document.getElementById('p-weeks').textContent = weeksSet.size;
+  document.getElementById('p-ski').textContent = bestSki || '—';
+  document.getElementById('p-row').textContent = bestRow || '—';
+
+  // Strength
+  const strEl = document.getElementById('p-strength-cards');
+  const exMap = {};
+  for (let w = 1; w <= 4; w++) {
+    ['tue','thu'].forEach(day => {
+      const cfg = WC[w][day].str;
+      const s = d[`w${w}_${day}`];
+      if (!s) return;
+      cfg.forEach((ex, i) => {
+        if (!exMap[ex.n]) exMap[ex.n] = [];
+        const kg = Math.max(...[1,2,3].map(n => parseFloat(s[`${day}-s${n}-${i}-kg`])||0));
+        if (kg > 0) exMap[ex.n].push({w, kg});
+      });
+    });
+  }
+  const exEntries = Object.entries(exMap).filter(([,v]) => v.length > 0);
+  if (!exEntries.length) { strEl.innerHTML = '<div class="empty-state">Log Tue/Thu sessions to see progress.</div>'; }
+  else {
+    strEl.innerHTML = '';
+    exEntries.forEach(([name, vals]) => {
+      const best = Math.max(...vals.map(v => v.kg));
+      const max = best * 1.15 || 100;
+      const card = document.createElement('div');
+      card.className = 'prog-ex';
+      card.innerHTML = `
+        <div class="prog-ex-header"><div class="prog-ex-name">${name}</div><div class="prog-ex-best">Best: ${best} kg</div></div>
+        <div class="prog-bars">${vals.map(v => {
+          const h = Math.round((v.kg/max)*100);
+          return `<div class="prog-bar-wrap">
+            <div class="prog-bar-val">${v.kg}</div>
+            <div class="prog-bar" style="height:${h}%;background:var(--strength)"></div>
+            <div class="prog-bar-wk">W${v.w}</div>
+          </div>`;
+        }).join('')}</div>`;
+      strEl.appendChild(card);
+    });
+  }
+
+  // Stations
+  const stEl = document.getElementById('p-station-rows');
+  const stDefs = [{n:'🎿 SkiErg',k:'sat-ski-r1'},{n:'🛷 Sled Push',k:'sat-push-r1'},{n:'🔗 Sled Pull',k:'sat-pull-r1'},{n:'🚣 Row Erg',k:'sat-row-r1'},{n:'⚡ Burpee Broad Jumps',k:'sat-bbj-r1'},{n:'🏋️ Farmers Carry',k:'sat-fc-r1'},{n:'🎒 Sandbag Lunges',k:'sat-sb-r1'},{n:'🏀 Wall Balls',k:'sat-wb-r1'}];
+  const stRows = stDefs.map(st => {
+    const entries = [];
+    let best = null;
+    for (let w = 1; w <= 4; w++) {
+      const sat = d[`w${w}_sat`];
+      if (sat && sat[st.k] && sat[st.k].trim() && !sat[st.k].includes('-')) {
+        const t = sat[st.k];
+        entries.push({w, t});
+        if (!best || t2s(t) < t2s(best)) best = t;
+      }
+    }
+    return {st, entries, best};
+  }).filter(r => r.entries.length > 0);
+
+  if (!stRows.length) { stEl.innerHTML = '<div class="empty-state">Log Saturday sessions to see progress.</div>'; }
+  else {
+    stEl.innerHTML = '';
+    stRows.forEach(({st, entries, best}) => {
+      const div = document.createElement('div');
+      div.className = 'station-row';
+      div.innerHTML = `
+        <div class="station-row-name">${st.n}<span class="station-row-best">${best ? '🏆 '+best : ''}</span></div>
+        <div class="station-times">${entries.map(e => `
+          <div class="st-time-chip">
+            <div class="wk">W${e.w}</div>
+            <div class="tm ${e.t===best?'best':''}">${e.t}</div>
+          </div>`).join('')}</div>`;
+      stEl.appendChild(div);
+    });
+  }
+
+  // AMRAP
+  const amrapEntries = [];
+  for (let w = 1; w <= 4; w++) {
+    const s = d[`w${w}_thu`];
+    if (s && s['thu-amrap'] && s['thu-amrap'].trim()) amrapEntries.push({w, r: parseFloat(s['thu-amrap'])});
+  }
+  const amEl = document.getElementById('p-amrap-chips');
+  const amBest = document.getElementById('p-amrap-best');
+  if (!amrapEntries.length) { amEl.innerHTML = '<div class="empty-state">No AMRAP data yet.</div>'; amBest.textContent = ''; }
+  else {
+    const best = Math.max(...amrapEntries.map(e => e.r));
+    amBest.textContent = `Best: ${best} rounds`;
+    amEl.innerHTML = amrapEntries.map(e => `
+      <div class="amrap-chip">
+        <div class="wk">W${e.w}</div>
+        <div class="rds ${e.r===best?'best':''}">${e.r}</div>
+        <div class="lbl">rounds</div>
+      </div>`).join('');
+  }
+}
+
+// ══════════════════ NUKE ══════════════════
+function nuke() {
+  if (!confirm('Delete ALL saved data? This cannot be undone.')) return;
+  localStorage.removeItem(SK);
+  location.reload();
+}
+
+// ══════════════════ SERVICE WORKER ══════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+}
+
+init();
+</script>
+</body>
+</html>
