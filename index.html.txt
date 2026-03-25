@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="HYROX Log"/>
+<meta name="theme-color" content="#0a0a0a"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<title>HYROX Log</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0a0a0a;--sur:#111;--card:#181818;--card2:#212121;--b1:#252525;--b2:#303030;--acc:#e8ff3b;--red:#ff4c3b;--text:#f0f0f0;--mu:#555;--mu2:#888;--run:#3baaff;--str:#ff7c3b;--cir:#c97dff;--sta:#e8ff3b;--grn:#3bff9c;--st:env(safe-area-inset-top,0px);--sb:env(safe-area-inset-bottom,0px);}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-weight:300;display:flex;flex-direction:column;}
+.topbar{background:var(--sur);border-bottom:1px solid var(--b1);padding:calc(var(--st) + 10px) 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.tb-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;text-transform:uppercase;}
+.tb-title span{color:var(--acc);}
+.wk-pill{display:flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--b2);border-radius:20px;padding:5px 12px;}
+.wk-pill select{background:none;border:none;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;cursor:pointer;appearance:none;-webkit-appearance:none;}
+.wk-pill select:focus{outline:none;}
+.dtabs{display:flex;overflow-x:auto;background:var(--sur);border-bottom:1px solid var(--b1);scrollbar-width:none;flex-shrink:0;}
+.dtabs::-webkit-scrollbar{display:none;}
+.dt{flex-shrink:0;padding:10px 14px;background:none;border:none;border-bottom:3px solid transparent;color:var(--mu);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.dt .d{width:5px;height:5px;border-radius:50%;}
+.dt.on{color:var(--acc);border-bottom-color:var(--acc);}
+.scr{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.scr::-webkit-scrollbar{width:0;}
+.pnl{display:none;padding:14px 14px calc(var(--sb) + 80px);}
+.pnl.on{display:block;}
+.sl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--mu);margin:18px 0 10px;display:flex;align-items:center;gap:8px;}
+.sl:first-child{margin-top:0;}
+.sl::after{content:'';flex:1;height:1px;background:var(--b1);}
+.sb{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:2px 8px;border-radius:2px;}
+.sb-s{background:rgba(255,124,59,.15);color:var(--str);}
+.sb-c{background:rgba(201,125,255,.15);color:var(--cir);}
+.sb-r{background:rgba(59,170,255,.15);color:var(--run);}
+.sb-st{background:rgba(232,255,59,.1);color:var(--sta);}
+.exc{background:var(--card);border:1px solid var(--b1);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.exc-h{padding:11px 13px 7px;display:flex;align-items:baseline;justify-content:space-between;}
+.exc-n{font-size:14px;font-weight:500;}
+.exc-t{font-size:11px;color:var(--mu2);font-family:'Barlow Condensed',sans-serif;}
+.srow{display:flex;gap:8px;padding:0 13px 12px;overflow-x:auto;scrollbar-width:none;}
+.srow::-webkit-scrollbar{display:none;}
+.sc{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;}
+.sc .lbl{font-size:8px;letter-spacing:1px;color:var(--mu);text-transform:uppercase;}
+.inp{width:60px;height:42px;background:var(--card2);border:1.5px solid var(--b2);color:var(--text);border-radius:8px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;text-align:center;-webkit-appearance:none;transition:border-color .15s;}
+.inp:focus{outline:none;border-color:var(--acc);background:#252525;}
+.inp.done{border-color:rgba(59,255,156,.5);color:var(--grn);}
+.inp::placeholder{color:#2a2a2a;}
+.inp.ti{color:var(--sta);width:72px;font-size:14px;}
+.inp.sm{width:54px;font-size:14px;}
+.rw{padding:0 13px 11px;display:flex;align-items:center;gap:5px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;}
+.rw::-webkit-scrollbar{display:none;}
+.rl{font-size:9px;color:var(--mu);letter-spacing:1px;margin-right:2px;}
+.rb{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--b2);background:none;color:var(--mu);font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.rb.on{background:var(--acc);border-color:var(--acc);color:#000;}
+.rc{background:var(--card);border:1px solid var(--b1);border-radius:10px;margin-bottom:10px;padding:12px 13px;}
+.rc-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+.rc-n{font-size:14px;font-weight:500;}
+.rc-t{font-size:11px;color:var(--mu2);font-family:'Barlow Condensed',sans-serif;}
+.rf{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.rff{display:flex;flex-direction:column;gap:3px;}
+.rff .lbl{font-size:8px;color:var(--mu);letter-spacing:1px;text-transform:uppercase;}
+.stc{background:var(--card);border:1px solid var(--b1);border-radius:10px;margin-bottom:10px;}
+.stc-h{padding:11px 13px 0;display:flex;justify-content:space-between;align-items:baseline;}
+.stc-n{font-size:14px;font-weight:500;}
+.stc-t{font-size:11px;color:var(--mu2);font-family:'Barlow Condensed',sans-serif;}
+.stf{display:flex;gap:8px;padding:9px 13px 12px;flex-wrap:wrap;align-items:flex-end;}
+.sbtn{width:100%;padding:15px;background:var(--acc);color:#000;border:none;border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:14px;}
+.sbtn:active{background:#d4eb2f;}
+.sconf{text-align:center;font-size:12px;color:var(--grn);letter-spacing:1px;margin-top:7px;height:18px;opacity:0;transition:opacity .3s;}
+.sconf.on{opacity:1;}
+.ntx{width:100%;background:var(--card);border:1.5px solid var(--b1);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;font-weight:300;padding:11px 13px;border-radius:10px;resize:none;min-height:64px;-webkit-appearance:none;}
+.ntx:focus{outline:none;border-color:var(--acc);}
+.ntx::placeholder{color:var(--mu);}
+.rest-s{text-align:center;padding:40px 20px;}
+.rest-b{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:900;color:var(--mu);margin-bottom:10px;}
+.rest-sub{font-size:13px;color:var(--mu);line-height:2;}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.pst{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px;}
+.pst-l{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);margin-bottom:5px;}
+.pst-v{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--acc);}
+.pc{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:14px;margin-bottom:10px;}
+.pc-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
+.pc-n{font-size:14px;font-weight:500;}
+.pc-b{font-size:12px;color:var(--grn);}
+.ch{display:flex;gap:8px;align-items:flex-end;height:70px;margin-bottom:4px;}
+.cbw{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;height:100%;justify-content:flex-end;}
+.cb{width:100%;border-radius:3px 3px 0 0;min-height:4px;transition:height .3s;}
+.cb-v{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;color:var(--mu2);}
+.cb-w{font-size:8px;color:var(--mu);}
+.sr{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px;margin-bottom:10px;}
+.sr-n{font-size:13px;font-weight:500;color:var(--sta);margin-bottom:9px;display:flex;justify-content:space-between;}
+.sr-b{font-size:11px;color:var(--grn);}
+.chips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{background:var(--card2);border:1px solid var(--b2);border-radius:6px;padding:7px 11px;text-align:center;}
+.chip-w{font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;}
+.chip-t{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--sta);line-height:1.2;}
+.chip-t.b{color:var(--grn);}
+.rr{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px;margin-bottom:10px;}
+.rr-n{font-size:13px;font-weight:500;color:var(--run);margin-bottom:9px;display:flex;justify-content:space-between;}
+.rr-b{font-size:11px;color:var(--grn);}
+.rchips{display:flex;gap:7px;flex-wrap:wrap;}
+.rchip{background:var(--card2);border:1px solid var(--b2);border-radius:6px;padding:7px 11px;text-align:center;min-width:64px;}
+.rchip-w{font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;}
+.rchip-v{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--run);line-height:1.2;}
+.rchip-v.b{color:var(--grn);}
+.rchip-l{font-size:8px;color:var(--mu);}
+.empty{font-size:13px;color:var(--mu);padding:10px 0;}
+.dbtn{width:100%;padding:13px;background:rgba(255,76,59,.1);color:var(--red);border:1px solid rgba(255,76,59,.2);border-radius:10px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-top:20px;}
+.ib{background:rgba(232,255,59,.07);border:1px solid rgba(232,255,59,.2);border-radius:10px;padding:13px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start;}
+.ib-i{font-size:22px;flex-shrink:0;}
+.ib-t{font-size:12px;color:#bbb;line-height:1.6;}
+.ib-t strong{color:var(--acc);}
+.ib-x{background:none;border:none;color:var(--mu);font-size:16px;cursor:pointer;flex-shrink:0;padding:0 2px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tb-title">HYROX <span>Log</span></div>
+  <div class="wk-pill">
+    <select id="wkSel" onchange="switchWeek(+this.value)">
+      <option value="1">W1 · Foundation</option>
+      <option value="2">W2 · Build</option>
+      <option value="3">W3 · Peak</option>
+      <option value="4">W4 · Taper</option>
+    </select>
+    <span style="color:var(--mu);font-size:11px;pointer-events:none;">▾</span>
+  </div>
+</div>
+<div class="dtabs">
+  <button class="dt on" onclick="sd('mon',this)"><span class="d" style="background:var(--run)"></span>Mon</button>
+  <button class="dt" onclick="sd('tue',this)"><span class="d" style="background:var(--cir)"></span>Tue</button>
+  <button class="dt" onclick="sd('wed',this)"><span class="d" style="background:var(--mu)"></span>Wed</button>
+  <button class="dt" onclick="sd('thu',this)"><span class="d" style="background:var(--cir)"></span>Thu</button>
+  <button class="dt" onclick="sd('fri',this)"><span class="d" style="background:var(--run)"></span>Fri</button>
+  <button class="dt" onclick="sd('sat',this)"><span class="d" style="background:var(--sta)"></span>Sat</button>
+  <button class="dt" onclick="sd('prog',this)"><span class="d" style="background:var(--grn)"></span>Progress</button>
+</div>
+<div class="scr" id="scr">
+
+<div class="pnl on" id="p-mon">
+  <div id="ib" class="ib"><div class="ib-i">📲</div><div class="ib-t"><strong>Add to Home Screen</strong> — tap Share in Safari → "Add to Home Screen" to install as an offline app.</div><button class="ib-x" onclick="closeIB()">✕</button></div>
+  <div class="sl"><span class="sb sb-r">Run</span><span id="mon-d">Aerobic Base + Fartlek</span></div>
+  <div id="mon-segs"></div>
+  <div class="sl"><span class="sb sb-r">Notes</span></div>
+  <textarea class="ntx" id="n-mon" placeholder="How did it feel? Pace notes..."></textarea>
+  <button class="sbtn" onclick="sv('mon')">Save Monday</button>
+  <div class="sconf" id="sc-mon">✓ Saved</div>
+</div>
+
+<div class="pnl" id="p-tue">
+  <div class="sl"><span class="sb sb-s">A — Strength</span><span id="tue-sl">3 sets · 90s rest</span></div>
+  <div id="tue-sc"></div>
+  <div class="sl"><span class="sb sb-c">B — Circuit</span><span id="tue-cl">3 rounds</span></div>
+  <div id="tue-cc"></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+    <span style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;">Rounds completed</span>
+    <input class="inp" id="tue-amrap" placeholder="0" oninput="fi(this)" inputmode="numeric" style="width:56px;"/>
+  </div>
+  <div class="sl"><span class="sb sb-c">Notes</span></div>
+  <textarea class="ntx" id="n-tue" placeholder="PBs, energy, what to improve..."></textarea>
+  <button class="sbtn" onclick="sv('tue')">Save Tuesday</button>
+  <div class="sconf" id="sc-tue">✓ Saved</div>
+</div>
+
+<div class="pnl" id="p-wed">
+  <div class="rest-s"><div class="rest-b">REST</div><div class="rest-sub">Foam roll TFL · Hip flexor stretch<br/>Glute activation · Sleep 8+ hrs</div></div>
+  <div class="sl"><span class="sb sb-r">Notes</span></div>
+  <textarea class="ntx" id="n-wed" placeholder="Body feel, sleep, soreness..."></textarea>
+  <button class="sbtn" onclick="sv('wed')">Save Notes</button>
+  <div class="sconf" id="sc-wed">✓ Saved</div>
+</div>
+
+<div class="pnl" id="p-thu">
+  <div class="sl"><span class="sb sb-s">A — Strength</span><span id="thu-sl">3 sets · 90s rest</span></div>
+  <div id="thu-sc"></div>
+  <div class="sl"><span class="sb sb-c">B — AMRAP</span><span id="thu-cl">15 min</span></div>
+  <div id="thu-cc"></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;">
+    <span style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:1px;">Total rounds — beat last week!</span>
+    <input class="inp" id="thu-amrap" placeholder="0" oninput="fi(this)" inputmode="numeric" style="width:56px;"/>
+  </div>
+  <div class="sl"><span class="sb sb-c">Notes</span></div>
+  <textarea class="ntx" id="n-thu" placeholder="AMRAP score, weights, how it felt..."></textarea>
+  <button class="sbtn" onclick="sv('thu')">Save Thursday</button>
+  <div class="sconf" id="sc-thu">✓ Saved</div>
+</div>
+
+<div class="pnl" id="p-fri">
+  <div class="sl"><span class="sb sb-r">Run</span><span id="fri-d">Threshold Intervals</span></div>
+  <div id="fri-segs"></div>
+  <div class="sl"><span class="sb sb-r">Notes</span></div>
+  <textarea class="ntx" id="n-fri" placeholder="Pace splits, HR, how it felt..."></textarea>
+  <button class="sbtn" onclick="sv('fri')">Save Friday</button>
+  <div class="sconf" id="sc-fri">✓ Saved</div>
+</div>
+
+<div class="pnl" id="p-sat">
+  <div class="sl"><span class="sb sb-st">Stations</span><span id="sat-d">Log time + weight per station</span></div>
+  <div id="sat-stc"></div>
+  <div class="stc" style="margin-bottom:10px;">
+    <div class="stc-h"><div class="stc-n">⏱ Total Session</div></div>
+    <div class="stf"><div class="rff"><div class="lbl">Total Time</div><input class="inp ti" id="sat-total" placeholder="mm:ss" oninput="fi(this)"/></div></div>
+    <div class="rw"><span class="rl">Overall RPE</span><div id="r-sat-ov"></div></div>
+  </div>
+  <div class="sl"><span class="sb sb-st">Notes</span></div>
+  <textarea class="ntx" id="n-sat" placeholder="Weakest station? Sled weight? Technique..."></textarea>
+  <button class="sbtn" onclick="sv('sat')">Save Saturday</button>
+  <div class="sconf" id="sc-sat">✓ Saved</div>
+</div>
+
+<div class="pnl" id="p-prog">
+  <div class="sl">Overview</div>
+  <div class="pgrid">
+    <div class="pst"><div class="pst-l">Sessions Logged</div><div class="pst-v" id="ps-s">0</div></div>
+    <div class="pst"><div class="pst-l">Weeks Active</div><div class="pst-v" id="ps-w">0</div></div>
+    <div class="pst"><div class="pst-l">Best SkiErg 1km</div><div class="pst-v" id="ps-ski" style="font-size:20px">—</div></div>
+    <div class="pst"><div class="pst-l">Best Row 1km</div><div class="pst-v" id="ps-row" style="font-size:20px">—</div></div>
+  </div>
+  <div class="sl">Strength Progress</div>
+  <div id="p-str"><div class="empty">Log Tue/Thu to see strength progress.</div></div>
+  <div class="sl">Run Pace Progress</div>
+  <div id="p-run"><div class="empty">Log Mon/Fri runs to see pace progress.</div></div>
+  <div class="sl">Station Times</div>
+  <div id="p-sta"><div class="empty">Log Saturday stations to see progress.</div></div>
+  <div class="sl">AMRAP Progress</div>
+  <div class="pc">
+    <div class="pc-h"><div class="pc-n">Thu AMRAP Rounds</div><div class="pc-b" id="p-ab"></div></div>
+    <div class="ch" id="p-ac"><div class="empty">No data yet.</div></div>
+  </div>
+  <button class="dbtn" onclick="nuke()">Clear All Data</button>
+</div>
+
+</div>
+<script>
+const SK='hx_v4';
+const G=()=>{try{return JSON.parse(localStorage.getItem(SK))||{};}catch{return{};}};
+const P=d=>localStorage.setItem(SK,JSON.stringify(d));
+
+const WC={
+1:{
+mon:{d:‘Aerobic Base + Fartlek Surges’,segs:[{n:‘Warm-up jog + drills’,t:‘8 min’},{n:‘5 km Z2 + 6×30s race-pace surges’,t:‘5 km’},{n:‘Cool-down jog’,t:‘5 min’}]},
+tue:{sl:‘3 sets · 90s rest · RPE 8/10’,cl:‘3 rounds · 60s rest’,
+str:[{n:‘Back Squat’,t:‘3×5 @80%’},{n:‘Bent-over Row’,t:‘3×6’},{n:‘DB Bench Press’,t:‘3×8’},{n:‘Dead Bug’,t:‘3×10 e/s’}],
+cir:[{n:‘SkiErg’,t:‘300 m’},{n:‘Wall Balls (race wt)’,t:‘20 reps’},{n:‘Sled Push Sim’,t:‘20 m’},{n:‘Burpee Broad Jumps’,t:‘12 reps’},{n:‘KB Farmers Carry’,t:‘40 m’}]},
+thu:{sl:‘3 sets · 90s rest · RPE 8/10’,cl:‘AMRAP 15 min’,
+str:[{n:‘Trap Bar Deadlift’,t:‘3×5 @80%’},{n:‘Weighted Pull-ups’,t:‘3×6’},{n:‘DB Romanian DL’,t:‘3×10’},{n:‘Copenhagen Plank’,t:‘3×20s e/s’}],
+cir:[{n:‘Row Erg’,t:‘250 m’},{n:‘Sled Pull Sim’,t:‘20 m’},{n:‘Sandbag Lunges’,t:‘25 m’},{n:‘Burpee Broad Jumps’,t:‘10 reps’},{n:‘Wall Balls (race wt)’,t:‘15 reps’}]},
+fri:{d:‘Threshold Intervals’,segs:[{n:‘Warm-up jog’,t:‘8 min’},{n:‘5 × 1 km threshold’,t:‘75s rest’},{n:‘Cool-down jog’,t:‘5 min’}]},
+sat:{d:‘Technique Day · no time pressure’,stas:[{n:‘🎿 SkiErg’,t:‘1000 m easy’},{n:‘🛷 Sled Push’,t:‘25 m light’},{n:‘🔗 Sled Pull’,t:‘25 m light’},{n:‘⚡ Burpee Broad Jumps’,t:‘20 reps’},{n:‘🚣 Row Erg’,t:‘1000 m easy’},{n:‘🏋️ Farmers Carry’,t:‘25 m’},{n:‘🎒 Sandbag Lunges’,t:‘25 m’},{n:‘🏀 Wall Balls’,t:‘50 reps’}]}
+},
+2:{
+mon:{d:‘Race Pace + All-Out Finisher’,segs:[{n:‘Warm-up jog’,t:‘8 min’},{n:‘6 × 1 km @ race pace’,t:‘75s rest’},{n:‘Rest’,t:‘2 min’},{n:‘400 m all-out finisher’,t:‘max effort’},{n:‘Cool-down jog’,t:‘5 min’}]},
+tue:{sl:‘3 sets · 90s rest · RPE 8/10’,cl:‘4 rounds · 60s rest’,
+str:[{n:‘Back Squat’,t:‘3×4 @85%’},{n:‘Weighted Pull-ups’,t:‘3×5’},{n:‘Romanian Deadlift’,t:‘3×8’},{n:‘Back Extension’,t:‘3×12’}],
+cir:[{n:‘400m run → SkiErg’,t:‘300 m no rest’},{n:‘Sled Push Sim’,t:‘25 m’},{n:‘Wall Balls (race wt)’,t:‘20 reps’},{n:‘Burpee Broad Jumps’,t:‘12 reps’}]},
+thu:{sl:‘3 sets · 90s rest · RPE 8/10’,cl:‘AMRAP 18 min’,
+str:[{n:‘Trap Bar Deadlift’,t:‘3×4 @85%’},{n:‘Bulgarian Split Squat’,t:‘3×8 e/s’},{n:‘DB Bench Press’,t:‘3×8’},{n:‘Single-leg RDL’,t:‘3×8 e/s’}],
+cir:[{n:‘Row Erg’,t:‘250 m’},{n:‘Sled Pull Sim’,t:‘20 m’},{n:‘KB Farmers Carry’,t:‘50 m’},{n:‘Burpee Broad Jumps’,t:‘12 reps’},{n:‘Wall Balls (race wt)’,t:‘20 reps’}]},
+fri:{d:‘Tempo + Sprint Finishers’,segs:[{n:‘Easy jog’,t:‘8 min’},{n:‘2 km Z2 → 3 km threshold’,t:‘negative split’},{n:‘Rest’,t:‘90s’},{n:‘4 × 200 m faster than race pace’,t:‘45s rest’},{n:‘Cool-down jog’,t:‘5 min’}]},
+sat:{d:‘Timed Stations · 2 rounds · record splits’,stas:[{n:‘🎿 SkiErg’,t:‘1000 m timed’},{n:‘🛷 Sled Push’,t:‘50 m mod wt’},{n:‘🔗 Sled Pull’,t:‘50 m mod wt’},{n:‘⚡ Burpee Broad Jumps’,t:‘30 reps’},{n:‘🚣 Row Erg’,t:‘1000 m timed’},{n:‘🏋️ Farmers Carry’,t:‘50 m’},{n:‘🎒 Sandbag Lunges’,t:‘25 m’},{n:‘🏀 Wall Balls’,t:‘75 reps’}]}
+},
+3:{
+mon:{d:‘Full Race Volume — 8×1km’,segs:[{n:‘Warm-up jog’,t:‘8 min’},{n:‘8 × 1 km @ race pace’,t:‘60s rest’},{n:‘Cool-down jog’,t:‘5 min’}]},
+tue:{sl:‘3 sets · 90s rest · RPE 9/10’,cl:‘4 rounds · 60s rest · race weights’,
+str:[{n:‘Back Squat’,t:‘3×3 @88-90%’},{n:‘Weighted Pull-ups’,t:‘3×4’},{n:‘Trap Bar Deadlift’,t:‘3×3 @88%’},{n:‘Hollow Body Hold’,t:‘3×30s’}],
+cir:[{n:‘400m run → SkiErg’,t:‘300 m no rest’},{n:‘Sled Push Sim (max)’,t:‘25 m’},{n:‘Wall Balls (race wt)’,t:‘25 reps’},{n:‘KB Lunges (race wt)’,t:‘25 m’},{n:‘Burpee Broad Jumps’,t:‘15 reps’}]},
+thu:{sl:‘3 sets · 90s rest · RPE 9/10’,cl:‘AMRAP 20 min · race weights’,
+str:[{n:‘Trap Bar Deadlift’,t:‘3×3 @88%’},{n:‘Bulgarian Split Squat’,t:‘3×6 e/s’},{n:‘DB Bench Press’,t:‘3×6’},{n:‘Copenhagen Plank’,t:‘3×25s e/s’}],
+cir:[{n:‘Row Erg’,t:‘250 m max’},{n:‘Sled Pull Sim (max)’,t:‘20 m’},{n:‘Sandbag Lunges’,t:‘25 m’},{n:‘Burpee Broad Jumps’,t:‘15 reps’},{n:‘KB Farmers Carry’,t:‘50 m’},{n:‘Wall Balls (race wt)’,t:‘20 reps’}]},
+fri:{d:‘Mixed Pace — Race + Overdrive’,segs:[{n:‘Warm-up jog’,t:‘8 min’},{n:‘4 × 1 km @ race pace’,t:‘60s rest’},{n:‘Rest’,t:‘2 min’},{n:‘4 × 400 m faster than race pace’,t:‘60s rest’},{n:‘Cool-down jog’,t:‘5 min’}]},
+sat:{d:‘Half Simulation · race weights’,stas:[{n:‘🎿 SkiErg’,t:‘1000 m race pace’},{n:‘🛷 Sled Push’,t:’+102 kg · 50 m’},{n:‘🔗 Sled Pull’,t:’+103 kg · 50 m’},{n:‘⚡ Burpee Broad Jumps’,t:‘80 reps’},{n:‘🚣 Row Erg’,t:’— half sim’},{n:‘🏋️ Farmers Carry’,t:’—’},{n:‘🎒 Sandbag Lunges’,t:’—’},{n:‘🏀 Wall Balls’,t:’—’}]}
+},
+4:{
+mon:{d:‘Taper Sharpener’,segs:[{n:‘Warm-up jog’,t:‘10 min’},{n:‘4 × 1 km @ race pace’,t:‘90s rest’},{n:‘2 × 200 m overdrive’,t:‘60s rest’},{n:‘Cool-down jog’,t:‘8 min’}]},
+tue:{sl:‘2 sets · taper’,cl:‘2 rounds only’,
+str:[{n:‘Back Squat’,t:‘2×4 @75%’},{n:‘Pull-ups (BW)’,t:‘2×6’},{n:‘Romanian DL light’,t:‘2×8’},{n:‘Dead Bug’,t:‘2×10 e/s’}],
+cir:[{n:‘SkiErg’,t:‘200 m easy’},{n:‘Wall Balls (race wt)’,t:‘15 reps’},{n:‘Burpee Broad Jumps’,t:‘8 reps’},{n:‘KB Farmers Carry’,t:‘25 m’}]},
+thu:{sl:‘2 sets · activation’,cl:‘1 round only’,
+str:[{n:‘Goblet Squat’,t:‘2×10 light’},{n:‘DB Row’,t:‘2×10’},{n:‘Glute Bridge’,t:‘2×12’},{n:‘Copenhagen Plank’,t:‘2×20s e/s’}],
+cir:[{n:‘Row Erg’,t:‘200 m easy’},{n:‘Wall Balls (race wt)’,t:‘20 reps’},{n:‘KB Farmers Carry’,t:‘25 m’},{n:‘Burpee Broad Jumps’,t:‘8 reps’}]},
+fri:{d:‘Easy Jog + Strides (taper)’,segs:[{n:‘Easy Z1-Z2 jog’,t:‘20 min’},{n:‘2 × 100 m strides’,t:‘relaxed’}]},
+sat:{d:‘🏁 RACE DAY’,stas:[{n:‘🎿 SkiErg’,t:‘Race · 1000 m’},{n:‘🛷 Sled Push’,t:’+102 kg · 50 m’},{n:‘🔗 Sled Pull’,t:’+103 kg · 50 m’},{n:‘⚡ Burpee Broad Jumps’,t:‘80 reps’},{n:‘🚣 Row Erg’,t:‘Race · 1000 m’},{n:‘🏋️ Farmers Carry’,t:‘2×24 kg · 25 m’},{n:‘🎒 Sandbag Lunges’,t:‘20 kg · 25 m’},{n:‘🏀 Wall Balls’,t:‘4 kg · 100 reps’}]}
+}
+};
+
+const SKS=[‘ski’,‘push’,‘pull’,‘bbj’,‘row’,‘fc’,‘sb’,‘wb’];
+let W=1;
+
+function init(){
+bRpe(‘r-sat-ov’,‘sat_ov’);
+switchWeek(1);
+const d=G();
+if(d.ibD){const e=document.getElementById(‘ib’);if(e)e.style.display=‘none’;}
+}
+
+function closeIB(){
+document.getElementById(‘ib’).style.display=‘none’;
+const d=G();d.ibD=true;P(d);
+}
+
+function switchWeek(w){
+W=w;const c=WC[w];
+document.getElementById(‘mon-d’).textContent=c.mon.d;
+document.getElementById(‘fri-d’).textContent=c.fri.d;
+document.getElementById(‘sat-d’).textContent=c.sat.d;
+document.getElementById(‘tue-sl’).textContent=c.tue.sl;
+document.getElementById(‘tue-cl’).textContent=c.tue.cl;
+document.getElementById(‘thu-sl’).textContent=c.thu.sl;
+document.getElementById(‘thu-cl’).textContent=c.thu.cl;
+bSegs(‘mon’,c.mon.segs);
+bSegs(‘fri’,c.fri.segs);
+bStr(‘tue’,c.tue.str,c.tue.cir);
+bStr(‘thu’,c.thu.str,c.thu.cir);
+bSta(c.sat.stas);
+loadAll();
+}
+
+function bSegs(day,segs){
+const el=document.getElementById(`${day}-segs`);el.innerHTML=’’;
+segs.forEach((s,i)=>{
+const c=document.createElement(‘div’);c.className=‘rc’;
+c.innerHTML=`<div class="rc-h"><div class="rc-n">${s.n}</div><div class="rc-t">${s.t}</div></div> <div class="rf"> <div class="rff"><div class="lbl">Time</div><input class="inp ti" id="${day}-${i}-t" placeholder="mm:ss" oninput="fi(this)"/></div> <div class="rff"><div class="lbl">Pace /km</div><input class="inp" id="${day}-${i}-p" placeholder="5:30" oninput="fi(this)" style="width:68px"/></div> <div class="rff"><div class="lbl">HR bpm</div><input class="inp sm" id="${day}-${i}-hr" placeholder="150" oninput="fi(this)" inputmode="numeric"/></div> </div> <div class="rw"><span class="rl">RPE</span><div id="rr-${day}-${i}"></div></div>`;
+el.appendChild(c);
+bRpe(`rr-${day}-${i}`,`${day}_${i}`);
+});
+}
+
+function bStr(day,str,cir){
+const se=document.getElementById(`${day}-sc`);const ce=document.getElementById(`${day}-cc`);
+se.innerHTML=’’;ce.innerHTML=’’;
+str.forEach((ex,i)=>{
+const c=document.createElement(‘div’);c.className=‘exc’;
+c.innerHTML=`<div class="exc-h"><div class="exc-n">${ex.n}</div><div class="exc-t">${ex.t}</div></div> <div class="srow">${[1,2,3].map(s=>`
+<div class="sc"><div class="lbl">S${s} kg</div><input class="inp" id="${day}-s${s}-${i}-k" placeholder="kg" oninput="fi(this)" inputmode="decimal"/></div>
+<div class="sc"><div class="lbl">reps</div><input class="inp" id="${day}-s${s}-${i}-r" placeholder="—" oninput="fi(this)" inputmode="numeric"/></div>`).join('')} </div>`;
+se.appendChild(c);
+});
+cir.forEach((ex,i)=>{
+const rid=`rc-${day}-${i}`;
+const c=document.createElement(‘div’);c.className=‘exc’;
+c.innerHTML=`<div class="exc-h"><div class="exc-n">${ex.n}</div><div class="exc-t">${ex.t}</div></div> <div class="srow">${[1,2,3].map(r=>`<div class="sc"><div class="lbl">Round ${r}</div><input class="inp" id="${day}-c${r}-${i}" placeholder="—" oninput="fi(this)"/></div>`).join('')}</div> <div class="rw"><span class="rl">RPE</span><div id="${rid}"></div></div>`;
+ce.appendChild(c);
+bRpe(rid,`${day}_c${i}`);
+});
+}
+
+function bSta(stas){
+const el=document.getElementById(‘sat-stc’);el.innerHTML=’’;
+stas.forEach((s,i)=>{
+const k=SKS[i];const rid=`rs-${k}`;
+const c=document.createElement(‘div’);c.className=‘stc’;
+c.innerHTML=`<div class="stc-h"><div class="stc-n">${s.n}</div><div class="stc-t">${s.t}</div></div> <div class="stf"> <div class="rff"><div class="lbl">Round 1</div><input class="inp ti" id="sat-${k}-r1" placeholder="mm:ss" oninput="fi(this)"/></div> <div class="rff"><div class="lbl">Round 2</div><input class="inp ti" id="sat-${k}-r2" placeholder="mm:ss" oninput="fi(this)"/></div> <div class="rff"><div class="lbl">Weight</div><input class="inp sm" id="sat-${k}-wt" placeholder="kg" oninput="fi(this)" inputmode="decimal"/></div> </div> <div class="rw"><span class="rl">RPE</span><div id="${rid}"></div></div>`;
+el.appendChild(c);
+bRpe(rid,`sat_${k}`);
+});
+}
+
+function bRpe(elId,sk){
+const el=document.getElementById(elId);if(!el)return;el.innerHTML=’’;
+el.style.display=‘flex’;el.style.gap=‘5px’;el.style.alignItems=‘center’;
+for(let v=6;v<=10;v++){
+const b=document.createElement(‘button’);b.className=‘rb’;b.textContent=v;b.dataset.v=v;
+b.onclick=()=>{
+el.querySelectorAll(’.rb’).forEach(x=>x.classList.toggle(‘on’,+x.dataset.v===v));
+const d=G();d[`w${W}_rpe_${sk}`]=v;P(d);
+};
+el.appendChild(b);
+}
+}
+
+function lRpes(){
+const d=G();
+document.querySelectorAll(’[id^=“rr-”],[id^=“rc-”],[id^=“rs-”],[id=“r-sat-ov”]’).forEach(el=>{
+const sk=el.id.replace(/^(rr-|rc-|rs-)/,’’).replace(’-sat-ov’,‘sat_ov’);
+const key=el.id.startsWith(‘r-sat-ov’)?‘sat_ov’:el.id.replace(‘rr-’,’’).replace(‘rc-’,’’).replace(‘rs-’,’’);
+const v=d[`w${W}_rpe_${key}`];
+el.querySelectorAll(’.rb’).forEach(b=>b.classList.toggle(‘on’,v&&+b.dataset.v===+v));
+});
+}
+
+function fi(el){el.classList.toggle(‘done’,el.value.trim()!==’’);}
+
+function gInputs(day){
+const p=document.getElementById(`p-${day}`);if(!p)return[];
+return[…p.querySelectorAll(‘input,textarea’)].filter(e=>e.id).map(e=>e.id);
+}
+
+function sv(day){
+const d=G();const k=`w${W}_${day}`;const s={};
+gInputs(day).forEach(id=>{const e=document.getElementById(id);if(e)s[id]=e.value;});
+d[k]=s;d[`${k}_ok`]=true;P(d);
+const sc=document.getElementById(`sc-${day}`);
+if(sc){sc.classList.add(‘on’);setTimeout(()=>sc.classList.remove(‘on’),2000);}
+}
+
+function loadAll(){
+const d=G();
+[‘mon’,‘tue’,‘wed’,‘thu’,‘fri’,‘sat’].forEach(day=>{
+const s=d[`w${W}_${day}`];
+gInputs(day).forEach(id=>{const e=document.getElementById(id);if(!e)return;e.value=(s&&s[id])||’’;fi(e);});
+});
+lRpes();
+}
+
+function sd(id,btn){
+document.querySelectorAll(’.pnl’).forEach(p=>p.classList.remove(‘on’));
+document.querySelectorAll(’.dt’).forEach(t=>t.classList.remove(‘on’));
+document.getElementById(`p-${id}`).classList.add(‘on’);
+btn.classList.add(‘on’);
+document.getElementById(‘scr’).scrollTop=0;
+if(id===‘prog’)renderProg();
+}
+
+function t2s(t){if(!t||t.includes(’-’)||!t.includes(’:’))return 99999;const p=t.split(’:’);return(+p[0]||0)*60+(+p[1]||0);}
+
+function renderProg(){
+const d=G();let sess=0;const ws=new Set();let bSki=null,bRow=null;
+for(let w=1;w<=4;w++){
+[‘mon’,‘tue’,‘thu’,‘fri’,‘sat’].forEach(day=>{if(d[`w${w}_${day}_ok`]){sess++;ws.add(w);}});
+const sat=d[`w${w}_sat`];
+if(sat){
+const ski=sat[‘sat-ski-r1’],row=sat[‘sat-row-r1’];
+if(ski&&ski.trim()&&!ski.includes(’-’)){if(!bSki||t2s(ski)<t2s(bSki))bSki=ski;}
+if(row&&row.trim()&&!row.includes(’-’)){if(!bRow||t2s(row)<t2s(bRow))bRow=row;}
+}
+}
+document.getElementById(‘ps-s’).textContent=sess;
+document.getElementById(‘ps-w’).textContent=ws.size;
+document.getElementById(‘ps-ski’).textContent=bSki||’—’;
+document.getElementById(‘ps-row’).textContent=bRow||’—’;
+
+// Strength
+const se=document.getElementById(‘p-str’);const em={};
+for(let w=1;w<=4;w++){
+[‘tue’,‘thu’].forEach(day=>{
+const cfg=WC[w][day].str;const s=d[`w${w}_${day}`];if(!s)return;
+cfg.forEach((ex,i)=>{
+if(!em[ex.n])em[ex.n]=[];
+const kg=Math.max(…[1,2,3].map(n=>parseFloat(s[`${day}-s${n}-${i}-k`])||0));
+if(kg>0)em[ex.n].push({w,kg});
+});
+});
+}
+const ee=Object.entries(em).filter(([,v])=>v.length>0);
+if(!ee.length){se.innerHTML=’<div class="empty">Log Tue/Thu to see strength progress.</div>’;}
+else{
+se.innerHTML=’’;
+ee.forEach(([name,vals])=>{
+const best=Math.max(…vals.map(v=>v.kg));const mx=best*1.15||100;
+const c=document.createElement(‘div’);c.className=‘pc’;
+c.innerHTML=`<div class="pc-h"><div class="pc-n">${name}</div><div class="pc-b">Best: ${best} kg</div></div> <div class="ch">${vals.map(v=>{const h=Math.round((v.kg/mx)*100);return`<div class="cbw"><div class="cb-v">${v.kg}</div><div class="cb" style="height:${h}%;background:var(--str)"></div><div class="cb-w">W${v.w}</div></div>`;}).join('')}</div>`;
+se.appendChild(c);
+});
+}
+
+// Run
+const re=document.getElementById(‘p-run’);
+const rdefs=[{lbl:‘Mon Main Run’,day:‘mon’,si:1},{lbl:‘Fri Key Interval’,day:‘fri’,si:1}];
+const rrows=rdefs.map(def=>{
+const entries=[];let best=null;
+for(let w=1;w<=4;w++){
+const s=d[`w${w}_${def.day}`];if(!s)continue;
+const pace=s[`${def.day}-${def.si}-p`];
+if(pace&&pace.trim()){entries.push({w,pace});if(!best||t2s(pace)<t2s(best))best=pace;}
+}
+return{…def,entries,best};
+}).filter(r=>r.entries.length>0);
+if(!rrows.length){re.innerHTML=’<div class="empty">Log Mon/Fri runs to see pace progress.</div>’;}
+else{
+re.innerHTML=’’;
+rrows.forEach(r=>{
+const div=document.createElement(‘div’);div.className=‘rr’;
+div.innerHTML=`<div class="rr-n">${r.lbl}<span class="rr-b">${r.best?'🏆 Best: '+r.best+'/km':''}</span></div> <div class="rchips">${r.entries.map(e=>`<div class="rchip"><div class="rchip-w">W${e.w}</div><div class="rchip-v ${e.pace===r.best?'b':''}">${e.pace}</div><div class="rchip-l">/km</div></div>`).join('')}</div>`;
+re.appendChild(div);
+});
+}
+
+// Stations
+const ste=document.getElementById(‘p-sta’);
+const strows=SKS.map((k,i)=>{
+const entries=[];let best=null;
+for(let w=1;w<=4;w++){
+const s=d[`w${w}_sat`];if(!s)continue;
+const t=s[`sat-${k}-r1`];
+if(t&&t.trim()&&!t.includes(’-’)){entries.push({w,t});if(!best||t2s(t)<t2s(best))best=t;}
+}
+return{k,n:WC[1].sat.stas[i].n,entries,best};
+}).filter(r=>r.entries.length>0);
+if(!strows.length){ste.innerHTML=’<div class="empty">Log Saturday stations to see progress.</div>’;}
+else{
+ste.innerHTML=’’;
+strows.forEach(r=>{
+const div=document.createElement(‘div’);div.className=‘sr’;
+div.innerHTML=`<div class="sr-n">${r.n}<span class="sr-b">${r.best?'🏆 '+r.best:''}</span></div> <div class="chips">${r.entries.map(e=>`<div class="chip"><div class="chip-w">W${e.w}</div><div class="chip-t ${e.t===r.best?'b':''}">${e.t}</div></div>`).join('')}</div>`;
+ste.appendChild(div);
+});
+}
+
+// AMRAP
+const ae=[];
+for(let w=1;w<=4;w++){const s=d[`w${w}_thu`];if(s&&s[‘thu-amrap’]&&s[‘thu-amrap’].trim())ae.push({w,r:parseFloat(s[‘thu-amrap’])});}
+const ac=document.getElementById(‘p-ac’);const ab=document.getElementById(‘p-ab’);
+if(!ae.length){ac.innerHTML=’<div class="empty">No AMRAP data yet.</div>’;ab.textContent=’’;}
+else{
+const best=Math.max(…ae.map(e=>e.r));const mx=best*1.15||10;
+ab.textContent=`Best: ${best} rounds`;
+ac.innerHTML=ae.map(e=>{const h=Math.round((e.r/mx)*100);return`<div class="cbw"><div class="cb-v">${e.r}</div><div class="cb" style="height:${h}%;background:var(--cir)"></div><div class="cb-w">W${e.w}</div></div>`;}).join(’’);
+}
+}
+
+function nuke(){if(!confirm(‘Delete ALL saved data?’))return;localStorage.removeItem(SK);location.reload();}
+if(‘serviceWorker’ in navigator)window.addEventListener(‘load’,()=>navigator.serviceWorker.register(’./sw.js’));
+init();
+</script>
+
+</body>
+</html>
