@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="theme-color" content="#0a0a0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="HYROX Solo"/>
+<title>HYROX Solo — Sub 1:20</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{background:#0a0a0f;overscroll-behavior:none}
+  body{font-family:'Inter',system-ui,-apple-system,sans-serif;color:#f0f0f4}
+  ::-webkit-scrollbar{display:none}
+  input,textarea{font-family:'DM Mono',monospace}
+  .fade{animation:fade .22s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  [data-act]:active{opacity:.7}
+  #err{display:none;color:#ff6b6b;font-family:monospace;font-size:11px;white-space:pre-wrap;padding:20px;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="err"></div>
+<script>
+window.onerror=function(m,s,l,c,e){var d=document.getElementById("err");if(d){d.style.display="block";d.textContent="Error:\n"+m+"\n"+(e&&e.stack?e.stack:"");}return false;};
+try{
+// ═══ HYROX WOMEN'S SOLO · SUB 1:20 · DATA ════════════════════════════════════
+const RACE_DATE = new Date("2026-11-14T09:00:00");
+
+const C = {
+  bg:"#0a0a0f", surface:"#14141c", card:"#1a1a24", border:"rgba(255,255,255,.07)",
+  text:"#f0f0f4", muted:"#6a6a82",
+  lime:"#e8ff47", blue:"#47c8ff", purple:"#c084fc", orange:"#fb923c", green:"#6aff47", red:"#ff6b6b",
+};
+
+const PHASES = [
+  { id:1, title:"ENGINE BASE", wks:"Weeks 1–4",
+    desc:"Run frequency ×3, aerobic base, strength foundation, station technique at race weights.",
+    weeks:{
+      1:{h:"Week 1 — Baseline",   run:"6×400m @ 5:00–5:10/km · 75s walk",  rest:"90s strength", rpe:"RPE 7"},
+      2:{h:"Week 2 — Add Volume", run:"8×400m @ 5:00–5:10/km · 75s walk",  rest:"90s strength", rpe:"RPE 7–8"},
+      3:{h:"Week 3 — Longer Reps",run:"5×800m @ 5:10–5:15/km · 90s walk",  rest:"75s strength", rpe:"RPE 8"},
+      4:{h:"Week 4 — Deload",     run:"4×400m relaxed @ 5:15–5:25/km",     rest:"90s all",      rpe:"RPE 6–7"},
+    }},
+  { id:2, title:"COMPROMISED", wks:"Weeks 5–8",
+    desc:"Race-pace km repeats + running off full-volume stations. This block fixes the run.",
+    weeks:{
+      5:{h:"Week 5 — Checkpoint", run:"4×1km @ 5:15–5:20/km · 90s",  rest:"75s strength", rpe:"RPE 8"},
+      6:{h:"Week 6 — Add a Rep",  run:"5×1km @ 5:10–5:15/km · 90s",  rest:"75s strength", rpe:"RPE 8"},
+      7:{h:"Week 7 — Density",    run:"6×1km @ 5:10/km · 75s",       rest:"60s strength", rpe:"RPE 8–9"},
+      8:{h:"Week 8 — Deload",     run:"3×1km @ 5:20/km · easy",      rest:"90s all",      rpe:"RPE 6–7"},
+    }},
+  { id:3, title:"RACE PREP", wks:"Weeks 9–11",
+    desc:"Full solo race simulation, goal-pace sharpening, taper into race weekend.",
+    weeks:{
+      9: {h:"Week 9 — Full Sim",  run:"8×1km @ 5:05–5:10/km · 60s",  rest:"60s strength", rpe:"RPE 8 · sim RPE 9"},
+      10:{h:"Week 10 — Sharpen",  run:"4×1km @ 5:00–5:05/km · 2min", rest:"75s strength", rpe:"RPE 8"},
+      11:{h:"Week 11 — RACE WEEK",run:"Openers 3×1km @ 5:05–5:10 · then rest up", rest:"Full recovery", rpe:"RPE 6 max"},
+    }},
+];
+const phOf = w => w<=4?1:w<=8?2:3;
+const wNote = w => PHASES[phOf(w)-1].weeks[w];
+
+const IV = {
+  1:{s:"6×400m",pace:"5:00–5:10/km",rec:"75s walk",note:"Controlled — finish with 2 reps left"},
+  2:{s:"8×400m",pace:"5:00–5:10/km",rec:"75s walk",note:"Same pace as Wk1 · +2 reps"},
+  3:{s:"5×800m",pace:"5:10–5:15/km",rec:"90s walk",note:"Hold form through the last 200m"},
+  4:{s:"4×400m",pace:"5:15–5:25/km",rec:"Full recovery",note:"Deload — smooth and springy"},
+  5:{s:"4×1km", pace:"5:15–5:20/km",rec:"90s",note:"Checkpoint week · even splits, no hero rep 1"},
+  6:{s:"5×1km", pace:"5:10–5:15/km",rec:"90s",note:"Slightly faster + one more rep than Wk5"},
+  7:{s:"6×1km", pace:"5:10/km",     rec:"75s",note:"Short rest = closest to race demand yet"},
+  8:{s:"3×1km", pace:"5:20/km",     rec:"2min",note:"Deload — keep the legs ticking over"},
+  9:{s:"8×1km", pace:"5:05–5:10/km",rec:"60s",note:"Full race run volume — the race without stations"},
+  10:{s:"4×1km",pace:"5:00–5:05/km",rec:"2min",note:"Faster than race pace, full recovery — sharpen"},
+  11:{s:"3×1km",pace:"5:05–5:10/km",rec:"2min",note:"Race openers · crisp, not hard"},
+};
+
+// ── kcal per day type ──
+const KC = { train:2550, big:2850, rest:2150 };
+
+function raceWeekDays(){
+  return [
+    {num:"D1",tag:"cond",c:C.blue,dur:"40 min",int:70,kcal:KC.train,
+     name:"Race Openers",title:"Race Openers — 3×1km",secs:[
+      {lbl:"Warm-Up · 12 min",exs:[
+        {id:"rw1a",ic:"🏃",n:"Easy jog",s:"8 min",note:"Conversational"},
+        {id:"rw1b",ic:"💨",n:"Strides",s:"4×60m",note:"Build to race pace · walk back"}]},
+      {lbl:"Openers",exs:[
+        {id:"rw1c",ic:"🎯",n:"Race-pace 1km",s:"3×1km",note:"5:05–5:10/km · 2 min rest · should feel comfortable — that's the point"}]},
+      {lbl:"Cool-Down",exs:[
+        {id:"rw1d",ic:"🚶",n:"Easy jog + hip mobility",s:"8 min",note:""}]}]},
+    {num:"D2",tag:"lower",c:C.purple,dur:"25 min",int:50,kcal:KC.train,
+     name:"Primer",title:"Primer — In & Out in 25 min",secs:[
+      {lbl:"Warm-Up · 5 min",exs:[{id:"rw2a",ic:"🔄",n:"Bike easy + leg swings",s:"5 min",note:""}]},
+      {lbl:"Primer — light & fast",exs:[
+        {id:"rw2b",ic:"🏋️",n:"Back Squat @ ~60%",s:"3×3",note:"Fast bar speed · nowhere near failure"},
+        {id:"rw2c",ic:"⚡",n:"Box Jump",s:"3×3",note:"Stick the landing"},
+        {id:"rw2d",ic:"🏐",n:"Wall Ball @ 4kg",s:"2×10",note:"Easy rhythm"}]}]},
+    {num:"D3",tag:"hybrid",c:C.lime,dur:"30 min",int:60,kcal:KC.train,
+     name:"Race-Pace Touches",title:"Race-Pace Touches",secs:[
+      {lbl:"Warm-Up · 8 min",exs:[{id:"rw3a",ic:"🏃",n:"Easy jog + drills",s:"8 min",note:""}]},
+      {lbl:"Touches — 2 rounds",fin:true,rounds:"2 rounds",cs:[
+        {n:"Run @ race pace",v:"400m"},{n:"Wall balls @ 4kg",v:"10"},{n:"Row easy",v:"250m"},{n:"Rest",v:"2 min"}]},
+      {lbl:"Mobility · 8 min",exs:[{id:"rw3b",ic:"🧘",n:"Hips · ankles · T-spine",s:"8 min",note:""}]}]},
+    {num:"D4",tag:"rest",c:C.muted,dur:"35 min",int:25,kcal:KC.train,
+     name:"Walk + Mobility",title:"Walk + Mobility — Carb Load Day",secs:[
+      {lbl:"Active Recovery",exs:[
+        {id:"rw4a",ic:"🚶",n:"Walk outside",s:"30 min",note:"Easy · switch off"},
+        {id:"rw4b",ic:"🧘",n:"Mobility: hips · calves · T-spine",s:"10 min",note:""},
+        {id:"rw4c",ic:"😮‍💨",n:"Box breathing",s:"5 min",note:"4s in · 4s hold · 4s out · 4s hold"}]}]},
+    {num:"D5",tag:"cond",c:C.blue,dur:"20 min",int:40,kcal:KC.train,
+     name:"Shakeout",title:"Shakeout — Day Before",secs:[
+      {lbl:"Shakeout",exs:[
+        {id:"rw5a",ic:"🏃",n:"Easy jog",s:"10 min",note:""},
+        {id:"rw5b",ic:"💨",n:"Strides",s:"4×20s",note:"Relaxed speed"},
+        {id:"rw5c",ic:"🎯",n:"Race-pace touch",s:"2×30s",note:"Remember the feeling"}]},
+      {lbl:"Admin",exs:[
+        {id:"rw5d",ic:"🎒",n:"Lay out kit · check start time · plan travel",s:"—",note:"Shoes, chip, fuel, warm layers for after"}]}]},
+    {num:"🏁",tag:"hybrid",c:C.lime,dur:"< 1:20 😉",int:100,kcal:KC.big,
+     name:"RACE DAY",title:"RACE DAY — SUB 1:20 🏁",secs:[
+      {lbl:"Warm-Up — start 25 min before",exs:[
+        {id:"rda",ic:"🏃",n:"Easy jog",s:"5 min",note:""},
+        {id:"rdb",ic:"⚡",n:"Leg swings + drills",s:"3 min",note:"A-skips · high knees"},
+        {id:"rdc",ic:"💨",n:"Builds to race pace",s:"3×30s",note:""},
+        {id:"rdd",ic:"🏐",n:"5 wall balls + 10 light ski pulls",s:"1×",note:"Prime the stations"}]},
+      {lbl:"Pacing Plan — tick as you commit",exs:[
+        {id:"rde",ic:"1️⃣",n:"Runs 1–3: 5:40/km, relaxed",s:"—",note:"Bank nothing · just stay smooth"},
+        {id:"rdf",ic:"2️⃣",n:"Runs 4–6: 5:35–5:40/km",s:"—",note:"The grind zone · hold form as stations bite"},
+        {id:"rdg",ic:"3️⃣",n:"Runs 7–8: whatever's left",s:"—",note:"If you paced right, you can lift here"},
+        {id:"rdh",ic:"💪",n:"Wall balls: planned sets from rep 1",s:"—",note:"5×20 or 4×25 · do NOT go unbroken and blow up"},
+        {id:"rdi",ic:"🛷",n:"Sled: low & steady push · keep moving on pull",s:"—",note:"Never redline a station"},
+        {id:"rdj",ic:"🏃",n:"RoxZone: jog every transition",s:"—",note:"8 solo transitions = 3–4 free minutes"}]}]},
+    {num:"R",tag:"rest",c:C.muted,dur:null,int:12,kcal:KC.rest,rest:true,
+     name:"Rest",title:"Rest & Recovery",secs:[]},
+  ];
+}
+
+function getDays(w){
+  if(w===11) return raceWeekDays();
+  const p=phOf(w), iv=IV[w], note=wNote(w), dl=(w===4||w===8);
+  const strNote = p===1?"RPE 7–8 · leave 2 reps in reserve":p===2?"RPE 8 · heavier than Phase 1":"~70% loads · max bar speed · reduced volume";
+  const d3Pace = p===1?"5:25/km":p===2?"5:15/km":"5:15/km";
+
+  // D6 varies
+  let d6;
+  if(p===1){
+    d6={name:"Z2 + RoxZone",title:"Z2 Run + RoxZone Practice — Optional",dur:"60 min",int:68,secs:[
+      {lbl:"Aerobic Base",exs:[{id:"z2a",ic:"🏃",n:"Zone 2 run",s:(w<=2?"40 min":"45 min"),note:"Conversational · nasal breathing where you can"}]},
+      {lbl:"RoxZone — 4 rounds",fin:true,rounds:"4 rounds",cs:[{n:"Easy jog",v:"200m"},{n:"Wall balls @ 4kg",v:"8"},{n:"KB swings",v:"5"}]},
+      {lbl:"Mobility · 10 min",exs:[{id:"z2b",ic:"🧘",n:"Hips · calves · ankles",s:"10 min",note:""}]}]};
+  } else if(p===2){
+    d6={name:"Half Race Sim",title:"Half Race Sim — full stations",dur:"~40 min",int:88,secs:[
+      {lbl:"Warm-Up · 8 min",exs:[{id:"hsa",ic:"🏃",n:"Jog + drills + 2 strides",s:"8 min",note:""}]},
+      {lbl:"HALF SIM — 4 rounds · full solo volume · record time",fin:true,rounds:"4 rounds",cs:[
+        {n:"Run @ 5:20–5:25",v:"1km"},{n:"R1: Ski",v:"1000m"},{n:"R2: Sled push 50 + pull 50",v:"race wt"},{n:"R3: Row",v:"1000m"},{n:"R4: Wall balls @ 4kg",v:"50"}]},
+      {lbl:"Cool-Down",exs:[{id:"hsb",ic:"🚶",n:"Walk + stretch · log total time",s:"8 min",note:""}]}]};
+  } else if(w===9){
+    d6={name:"FULL SOLO RACE SIM",title:"FULL Solo Race Simulation 🎯",dur:"~75–85 min",int:98,secs:[
+      {lbl:"Warm-Up · 12 min — treat it like race morning",exs:[{id:"fsa",ic:"🏃",n:"Jog + drills + 3 strides + 5 wall balls",s:"12 min",note:"Rehearse your race-morning fuelling today too"}]},
+      {lbl:"THE SIM — 8 rounds · full race · record total time",fin:true,rounds:"8 rounds",cs:[
+        {n:"Every round: Run @ 5:20–5:30",v:"1km"},
+        {n:"R1: Ski",v:"1000m"},{n:"R2: Sled push @ 102kg",v:"50m"},{n:"R3: Sled pull @ 78kg",v:"50m"},
+        {n:"R4: Burpee broad jump",v:"80m"},{n:"R5: Row",v:"1000m"},{n:"R6: Farmers @ 2×16kg",v:"200m"},
+        {n:"R7: Lunges @ 10kg",v:"100m"},{n:"R8: Wall balls @ 4kg",v:"100"}]},
+      {lbl:"Afterwards",exs:[{id:"fsb",ic:"📝",n:"RECORD TOTAL TIME — your race-day predictor",s:"—",note:"~1:22–1:25 here → sub-1:20 fresh is live. Note your slowest stations"}]}]};
+  } else {
+    d6={name:"Z2 Flush",title:"Z2 Flush — Optional",dur:"45 min",int:62,secs:[
+      {lbl:"Aerobic Flush",exs:[{id:"zfa",ic:"🏃",n:"Zone 2 run",s:"40 min",note:"Genuinely easy · skip if legs feel heavy"}]},
+      {lbl:"Mobility · 10 min",exs:[{id:"zfb",ic:"🧘",n:"Full lower-body flow",s:"10 min",note:""}]}]};
+  }
+
+  return [
+    // D1 RUN INTERVALS
+    {num:"D1",tag:"cond",c:C.blue,dur:"50 min",int:88,kcal:KC.train,calNote:"Biggest carbs the evening before + morning of this session",
+     name:"Run Intervals",title:"Run Intervals — "+iv.s,secs:[
+      {lbl:"Warm-Up · 12 min",exs:[
+        {id:"d1a",ic:"🏃",n:"Easy jog",s:"8 min",note:"Conversational · gradual build"},
+        {id:"d1b",ic:"⚡",n:"Drills: A-skips · high knees · butt kicks",s:"2×20m",note:""},
+        {id:"d1c",ic:"💨",n:"Strides to interval pace",s:"4×60m",note:"Walk-back recovery"}]},
+      {lbl:"Main Set — tick each rep",exs:[
+        {id:"d1m",ic:"🎯",n:"Intervals",s:iv.s,note:iv.pace+" · "+iv.rec+" between reps · "+iv.note}]},
+      {lbl:"Cool-Down + Core · 10 min",exs:[
+        {id:"d1d",ic:"🚶",n:"Easy jog / walk",s:"5 min",note:""},
+        {id:"d1e",ic:"🎯",n:"Hollow hold",s:"3×30s",note:""},
+        {id:"d1f",ic:"🎯",n:"Side plank",s:"3×30s/side",note:""}]}]},
+
+    // D2 LOWER + SLED
+    {num:"D2",tag:"lower",c:C.purple,dur:"55 min",int:85,kcal:KC.train,calNote:"Normal carbs · this day builds the sled + lunges",
+     name:"Lower + Sled",title:"Lower Strength + Sled Power",secs:[
+      {lbl:"Warm-Up · 6 min",exs:[
+        {id:"d2a",ic:"🚴",n:"Bike + leg swings",s:"4 min",note:""},
+        {id:"d2b",ic:"🍑",n:"Banded glute bridges + clamshells",s:"2×12",note:""}]},
+      {lbl:"Strength · 18 min",exs:[
+        {id:"d2c",ic:"🏋️",n:p===1?"Back Squat":p===2?"Trap Bar Deadlift":"Trap Bar Speed Pull",s:p===1?"4×5":p===2?"4×4":"4×3",note:p===1?strNote:p===2?"Explosive · 3 box jumps after each set":"60–70% · fastest pull · 3 box jumps after"},
+        {id:"d2d",ic:"🦵",n:p===1?"Romanian Deadlift":p===2?"Bulgarian Split Squat":"Weighted Step-Up",s:p===1?"3×8":p===2?"3×8/side":"3×10/side",note:p===1?"Hinge deep · loads the sled pull":"Single-leg strength = running economy"}]},
+      {lbl:"Sled · 15 min",exs:[
+        {id:"d2e",ic:"🛷",n:"Sled Push",s:"4×12.5m",note:p===1?"Moderate · low drive · small fast steps":p===2?"HEAVIER than race (102kg+) · grind it":"Race weight 102kg · fast race position"},
+        {id:"d2f",ic:p===1?"🍑":"🛷",n:p===1?"Barbell Hip Thrust":"Sled Pull",s:p===1?"3×10":"3×12.5m",note:p===1?"Glute drive powers every station":"78kg race weight · low hips · hand-over-hand"}]},
+      {lbl:"Accessory · 8 min",exs:[
+        {id:"d2g",ic:"🦵",n:"Standing Calf Raise",s:"3×15",note:"Runners' insurance · pause at top"},
+        {id:"d2h",ic:"🎯",n:"Pallof Press",s:"3×12/side",note:"Anti-rotation for carries + lunges"}]},
+      {lbl:"Finisher — 2 rounds",fin:true,rounds:"2 rounds",cs:[
+        {n:"Bike / ski hard",v:"30s"},{n:"KB swings",v:"15"},{n:"Walking lunges",v:"20"},{n:"Rest",v:"60s"}]}]},
+
+    // D3 ENGINE
+    {num:"D3",tag:"hybrid",c:C.lime,dur:"50 min",int:92,kcal:KC.big,calNote:"Carbs up · hardest engine day of the week",
+     name:"HYROX Engine",title:p===1?"Station Skills + Brick":p===2?"Compromised Running":"Race-Pace Brick",secs:(
+      p===1?[
+        {lbl:"Warm-Up · 6 min",exs:[{id:"d3a",ic:"🏃",n:"400m jog + dynamic mobility",s:"6 min",note:"Inchworms · hip hinges · arm circles"}]},
+        {lbl:"Station Skills — race weights · 18 min",exs:[
+          {id:"d3b",ic:"🏐",n:"Wall Ball @ 4kg",s:"3×20",note:"Unbroken · full depth · goal: build to 100 by Phase 3"},
+          {id:"d3c",ic:"🐸",n:"Burpee Broad Jump",s:"2×20m",note:"Step-down burpee · long low jump · pace it"},
+          {id:"d3d",ic:"🦵",n:"Sandbag Lunge @ 10kg",s:"2×25m",note:"Knee kisses floor · torso tall"}]},
+        {lbl:"Brick — 3 rounds",fin:true,rounds:"3 rounds",cs:[{n:"Row",v:"500m"},{n:"Run @ "+d3Pace,v:"400m"},{n:"Wall balls @ 4kg",v:"12"},{n:"Rest",v:"90s"}]},
+        {lbl:"Core · 5 min",exs:[{id:"d3e",ic:"🎯",n:"Hollow rock",s:"3×10",note:""},{id:"d3f",ic:"🎯",n:"Dead bug",s:"3×8/side",note:"Low back flat"}]},
+      ]:p===2?[
+        {lbl:"Warm-Up · 6 min",exs:[{id:"d3a",ic:"🏃",n:"400m jog + dynamic mobility",s:"6 min",note:""}]},
+        {lbl:"Block A — 4 rounds",fin:true,rounds:"4 rounds",cs:[{n:"Ski erg",v:"750m"},{n:"Run @ "+d3Pace,v:"400m"},{n:"Rest",v:"60s"}]},
+        {lbl:"Block B — 3 rounds",fin:true,rounds:"3 rounds",cs:[{n:"Burpee broad jumps",v:"10"},{n:"Run @ "+d3Pace,v:"400m"},{n:"Rest",v:"60s"}]},
+        {lbl:"Core · 5 min",exs:[{id:"d3e",ic:"🎯",n:"Hanging knee raise",s:"3×10",note:""},{id:"d3f",ic:"🎯",n:"Dead bug",s:"3×8/side",note:""}]},
+      ]:[
+        {lbl:"Warm-Up · 6 min",exs:[{id:"d3a",ic:"🏃",n:"400m jog + dynamic mobility",s:"6 min",note:""}]},
+        {lbl:"Race-Pace Brick — 4 rounds · station changes",fin:true,rounds:"4 rounds",cs:[
+          {n:"Every round: Run @ "+d3Pace,v:"1km"},{n:"R1: Ski",v:"750m"},{n:"R2: Wall balls @ 4kg",v:"25"},{n:"R3: Row",v:"750m"},{n:"R4: Burpee broad jump",v:"20"}]},
+        {lbl:"Sled Touch-Up · 8 min",exs:[{id:"d3g",ic:"🛷",n:"Sled push 12.5m + pull 12.5m @ race wt",s:"2×",note:"Fast + clean · full rest"}]},
+        {lbl:"Core · 5 min",exs:[{id:"d3e",ic:"🎯",n:"Hanging leg raise",s:"3×10",note:""}]},
+      ])},
+
+    // D4 UPPER + STATIONS
+    {num:"D4",tag:"upper",c:C.orange,dur:"55 min",int:80,kcal:KC.train,calNote:"Grip, carries, wall balls — the stations you own on race day",
+     name:"Upper + Stations",title:"Upper Strength + Station Work",secs:[
+      {lbl:"Warm-Up · 5 min",exs:[{id:"d4a",ic:"🔄",n:"Band pull-aparts + scap pull-ups",s:"2×12",note:""}]},
+      {lbl:"Strength Superset · 16 min",exs:[
+        {id:"d4b",ic:"💪",n:p===3?"DB Push Press":"Push Press",s:p===3?"3×5":"4×5",note:strNote+" · leg drive into lockout"},
+        {id:"d4c",ic:"🔙",n:"Pull-Ups (band if needed)",s:p===3?"3×6":"4×6",note:"Full ROM · controlled eccentric"}]},
+      {lbl:"Back + Pull · 12 min",exs:[
+        {id:"d4d",ic:"🔙",n:"Chest-Supported DB Row",s:"3×10",note:"Sled pull + ski carryover"},
+        {id:"d4e",ic:"🔙",n:"Straight-Arm Pulldown",s:"3×12",note:"This IS the ski erg pattern"}]},
+      {lbl:"Stations · 15 min",exs:[
+        {id:"d4f",ic:"🧳",n:p===2?"Farmers Carry @ 2×20kg":"Farmers Carry @ 2×16kg",s:p===1?"3×50m":p===2?"3×50m":"2×60m",note:p===2?"Overload — grip limits the 200m solo carry, build it now":"Solo carry is 200m — build grip now · quick feet"},
+        {id:"d4g",ic:"🏐",n:"Wall Balls @ 4kg",s:p===1?"3×20":p===2?"3×33":"2×40",note:p===2?"100 total in your planned race set size (25s or 33s)":"Unbroken · race rhythm"}]},
+      {lbl:"Core · 5 min",exs:[
+        {id:"d4h",ic:"🎯",n:"Hanging leg raise",s:"3×10",note:"No swing"},
+        {id:"d4i",ic:"🎯",n:"Plank with reach",s:"3×10/side",note:""}]},
+      {lbl:"Finisher — 2 rounds",fin:true,rounds:"2 rounds",cs:[{n:"Row",v:"250m"},{n:"Wall balls @ 4kg",v:"10"},{n:"Farmers @ 2×16kg",v:"40m"},{n:"Rest",v:"60s"}]}]},
+
+    // D5 TEMPO
+    {num:"D5",tag:"cond",c:C.blue,dur:"45 min",int:82,kcal:KC.train,calNote:"Normal carbs · easy on fat before the run",
+     name:"Tempo Run",title:"Tempo Run — Threshold",secs:[
+      {lbl:"Warm-Up · 12 min",exs:[
+        {id:"d5a",ic:"🏃",n:"Easy jog",s:"10 min",note:""},
+        {id:"d5b",ic:"💨",n:"Strides",s:"2×60m",note:""}]},
+      {lbl:"Tempo Block",exs:[
+        {id:"d5m",ic:"🎯",n:"Tempo",s:(p===1?(dl?"15 min":"20 min"):p===2?(dl?"20 min":"2×15 min"):(w===9?"30 min":"25 min")),note:(p===1?(dl?"5:40–5:50/km":"5:30–5:40/km"):p===2?(dl?"5:30/km":"5:20–5:25/km · 3 min jog between"):(w===9?"5:15–5:20/km":"5:15/km"))+" · "+(p===1?"comfortably hard, short sentences only":p===2?"cruise intervals — race-adjacent with a breather":"continuous, just slower than race pace")}]},
+      {lbl:"Cool-Down + Lower-Leg Care · 12 min",exs:[
+        {id:"d5c",ic:"🚶",n:"Easy jog / walk",s:"5 min",note:""},
+        {id:"d5d",ic:"🦵",n:"Single-leg calf raise (slow)",s:"3×12/side",note:"Tendon health — protects the run volume"},
+        {id:"d5e",ic:"🧘",n:"Calf + hip flexor stretch",s:"5 min",note:""}]}]},
+
+    // D6 OPTIONAL
+    {num:"D6",tag:(p===1||w===10)?"cond":"hybrid",c:(p===1||w===10)?C.blue:C.lime,dur:d6.dur,int:d6.int,kcal:(w===9?KC.big:KC.train),optional:true,
+     calNote:w===9?"Fuel this like a race rehearsal — carbs the night before":"Optional — skip if WHOOP recovery is low",
+     name:d6.name,title:d6.title,secs:d6.secs},
+
+    // REST
+    {num:"R",tag:"rest",c:C.muted,dur:null,int:12,kcal:KC.rest,rest:true,name:"Rest",title:"Rest & Recovery",secs:[]},
+  ];
+}
+
+// ── Body baseline: InBody 28 Jul 2026 ──
+const BODY_SEED = {
+  entries:[{date:"2026-07-28",weight:"59.6",smm:"28.7",pbf:"13.3",bmr:"1487",vfa:"29.9",score:"85"}],
+  nextScanDate:"2026-08-31",
+};
+
+
+// ═══ VANILLA APP · zero external dependencies ════════════════════════════════
+const store = (()=>{ let mem={}; try{const t="__t";localStorage.setItem(t,"1");localStorage.removeItem(t);
+  return {get:k=>{try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
+}catch(e){return {get:k=>mem[k]||null,set:(k,v)=>{mem[k]=v}};}})();
+const LS="hyrox-solo-v1";
+let DATA; try{DATA=JSON.parse(store.get(LS))||{}}catch(e){DATA={}}
+function persist(){store.set(LS,JSON.stringify(DATA));}
+const S={view:"train",week:1,day:0,fuel:"daily"};
+
+const dtr=()=>Math.max(0,Math.ceil((RACE_DATE-new Date())/86400000));
+const TAGS={cond:"RUN",lower:"LOWER",upper:"UPPER",hybrid:"ENGINE",rest:"REST"};
+const F={disp:"'Bebas Neue','Arial Narrow',system-ui,sans-serif",mono:"'DM Mono','SFMono-Regular',Menlo,monospace"};
+const e=s=>(s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+
+function bar(v,c){return `<div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:${v}%;background:${c};border-radius:2px"></div></div>`;}
+
+// ── Day card ──
+function dayCard(day,dk){
+  const dd=DATA[dk]||{};
+  if(day.rest){
+    return `<div class="fade" style="text-align:center;padding:48px 20px">
+      <div style="font-size:40px;margin-bottom:10px">🛌</div>
+      <div style="font-family:${F.disp};font-size:28px;color:${C.text};letter-spacing:.04em">Rest &amp; Recovery</div>
+      <div style="font-size:13px;color:${C.muted};margin:6px auto 0;line-height:1.6;max-width:260px">Sleep 8h+ · protein anchor stays · this is where the fitness lands. Optional 20–30 min walk or mobility.</div>
+      <div style="margin-top:16px;font-family:${F.mono};font-size:11px;color:${C.muted}">🍽️ ~${day.kcal.toLocaleString()} kcal · 148g protein</div></div>`;
+  }
+  let h=`<div class="fade">
+    <div style="font-family:${F.disp};font-size:25px;color:${C.text};letter-spacing:.03em;line-height:1.1;margin-bottom:3px">${e(day.title)}</div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:6px;flex-wrap:wrap">
+      <span style="font-family:${F.mono};font-size:9px;color:${day.c};border:1px solid ${day.c};border-radius:5px;padding:2px 6px;letter-spacing:.08em">${TAGS[day.tag]||day.tag.toUpperCase()}</span>
+      ${day.dur?`<span style="font-family:${F.mono};font-size:11px;color:${C.muted}">⏱ ${e(day.dur)}</span>`:""}
+      ${day.optional?`<span style="font-family:${F.mono};font-size:10px;color:${C.muted}">optional</span>`:""}
+    </div>
+    <div style="margin-bottom:12px">${bar(day.int,day.c)}</div>`;
+  if(day.calNote) h+=`<div style="background:rgba(71,200,255,.05);border:1px solid rgba(71,200,255,.14);border-radius:8px;padding:7px 10px;margin-bottom:12px;font-size:11px;color:${C.blue};line-height:1.5">🍽️ ~${day.kcal.toLocaleString()} kcal · ${e(day.calNote)}</div>`;
+
+  day.secs.forEach((sec,si)=>{
+    if(sec.fin){
+      const rounds=(dd.fins||{})[si]||[];
+      const n=parseInt((sec.rounds||"").match(/(\d+)/)?.[1]||"1");
+      h+=`<div style="background:rgba(232,255,71,.04);border:1px solid rgba(232,255,71,.15);border-radius:10px;padding:10px 12px;margin-top:6px">
+        <div style="font-family:${F.mono};font-size:9px;color:${C.lime};letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px">🔁 ${e(sec.lbl)}</div>`;
+      sec.cs.forEach((c,i)=>{ h+=`<div style="display:flex;justify-content:space-between;padding:4px 0;${i<sec.cs.length-1?"border-bottom:1px solid rgba(255,255,255,.04)":""}">
+        <span style="font-size:12.5px;color:${C.text}">${e(c.n)}</span><span style="font-family:${F.mono};font-size:12px;color:${C.lime};font-weight:600">${e(c.v)}</span></div>`; });
+      h+=`<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">`;
+      for(let i=0;i<n;i++){ const on=rounds[i];
+        h+=`<div data-act="round" data-si="${si}" data-ri="${i}" style="width:34px;height:34px;border-radius:8px;border:1.5px solid ${on?C.lime:C.muted};background:${on?C.lime:"transparent"};color:${on?"#0a0a0f":C.muted};display:flex;align-items:center;justify-content:center;font-family:${F.mono};font-size:12px;font-weight:700;cursor:pointer">${i+1}</div>`; }
+      h+=`</div></div>`;
+    } else {
+      h+=`<div style="margin-top:14px"><div style="font-family:${F.mono};font-size:9px;color:${C.muted};letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">${e(sec.lbl)}</div>`;
+      sec.exs.forEach(ex=>{ const done=!!(dd.done||{})[ex.id];
+        h+=`<div data-act="ex" data-id="${ex.id}" style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;opacity:${done?.5:1}">
+          <div style="width:22px;height:22px;border-radius:6px;border:1.5px solid ${done?C.green:C.muted};background:${done?C.green:"transparent"};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#0a0a0f;font-weight:700;margin-top:1px">${done?"✓":""}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+              <span style="font-size:13.5px;color:${C.text};font-weight:500;${done?"text-decoration:line-through":""}">${e(ex.ic)} ${e(ex.n)}</span>
+              ${ex.s&&ex.s!=="—"?`<span style="font-family:${F.mono};font-size:11px;color:${C.lime};font-weight:600;white-space:nowrap;flex-shrink:0">${e(ex.s)}</span>`:""}
+            </div>
+            ${ex.note?`<div style="font-size:11px;color:${C.muted};line-height:1.45;margin-top:2px">${e(ex.note)}</div>`:""}
+          </div></div>`; });
+      h+=`</div>`;
+    }
+  });
+
+  h+=`<div style="margin-top:16px">
+    <div style="font-family:${F.mono};font-size:9px;color:${C.muted};letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px">Notes / times</div>
+    <textarea data-field="note" data-dk="${dk}" rows="2" placeholder="Log paces, weights, how it felt, sim times…" style="width:100%;background:${C.card};border:1px solid ${C.border};border-radius:8px;padding:9px 10px;color:${C.text};font-size:12.5px;outline:none;resize:vertical;box-sizing:border-box">${e(dd.note||"")}</textarea>
+  </div>
+  <button data-act="complete" style="width:100%;margin-top:12px;padding:13px;border-radius:10px;border:1px solid ${dd.completed?C.green:C.border};background:${dd.completed?C.green:"transparent"};color:${dd.completed?"#0a0a0f":C.text};font-family:${F.disp};font-size:16px;letter-spacing:.06em;cursor:pointer">${dd.completed?"✓ SESSION DONE":"MARK SESSION DONE"}</button>
+  </div>`;
+  return h;
+}
+
+// ── Train ──
+function train(){
+  const days=getDays(S.week),note=wNote(S.week),ph=PHASES[phOf(S.week)-1],cur=days[S.day];
+  let h=`<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:4px">`;
+  for(let w=1;w<=11;w++){ const on=w===S.week,acc=ph.title==="RACE PREP"?C.lime:C.blue;
+    h+=`<div data-act="week" data-v="${w}" style="flex-shrink:0;width:38px;height:44px;border-radius:9px;border:1px solid ${on?(w>=9?C.lime:C.blue):C.border};background:${on?(w>=9?C.lime:C.blue):"transparent"};color:${on?"#0a0a0f":C.muted};font-family:${F.mono};font-size:13px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font-size:8px;opacity:.7">WK</span>${w}</div>`; }
+  h+=`</div>
+  <div style="background:rgba(71,200,255,.05);border:1px solid rgba(71,200,255,.2);border-radius:11px;padding:11px 13px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px">
+      <span style="font-family:${F.disp};font-size:17px;color:${C.text};letter-spacing:.04em">${e(note.h)}</span>
+      <span style="font-family:${F.mono};font-size:9px;color:${C.blue};white-space:nowrap">${e(note.rpe)}</span></div>
+    <div style="font-family:${F.mono};font-size:11px;color:${C.blue};margin-bottom:3px">🏃 ${e(note.run)}</div>
+    <div style="font-family:${F.mono};font-size:9px;color:${C.muted}">${e(ph.title)} · rest ${e(note.rest)} · 🏁 ${dtr()} days to race</div>
+  </div>
+  <div style="display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap">`;
+  days.forEach((d,i)=>{ const dk=`w${S.week}d${i}`,done=(DATA[dk]||{}).completed,on=i===S.day;
+    h+=`<div data-act="day" data-v="${i}" style="flex:1 1 0;min-width:38px;padding:9px 2px;border-radius:9px;border:1px solid ${on?d.c:C.border};background:${on?d.c:done?"rgba(106,255,71,.1)":"transparent"};color:${on?"#0a0a0f":done?C.green:C.muted};cursor:pointer;font-family:${F.mono};font-weight:700;font-size:12px;text-align:center;position:relative">${e(d.num)}${done&&!on?`<span style="position:absolute;top:2px;right:4px;font-size:8px">✓</span>`:""}</div>`; });
+  h+=`</div>`+dayCard(cur,`w${S.week}d${S.day}`);
+  return h;
+}
+
+// ── Fuel ──
+function fuel(){
+  const tabs=[["daily","Daily"],["morning","Early AM"],["timing","Timing"],["race","Race Wk"],["enough","Enough?"]];
+  const SH=(x,c)=>`<div style="font-family:${F.disp};font-size:19px;color:${c||C.lime};letter-spacing:.03em;margin:16px 0 8px">${x}</div>`;
+  const row=(k,v,c)=>`<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 12px;background:${C.card};border-radius:8px;margin-bottom:5px;align-items:flex-start"><span style="font-family:${F.mono};font-size:11px;color:${c||C.muted};font-weight:600;white-space:nowrap">${e(k)}</span><span style="font-size:11.5px;color:${C.muted};line-height:1.5;text-align:right">${v}</span></div>`;
+  let h=`<div class="fade"><div style="font-family:${F.disp};font-size:30px;letter-spacing:.03em;color:${C.text}">FUEL <span style="color:${C.blue}">GUIDE</span></div>
+    <div style="font-family:${F.mono};font-size:10px;color:${C.muted};margin-bottom:12px">InBody-confirmed · fuel the work, don't chase it</div>
+    <div style="display:flex;gap:2px;background:${C.surface};border:1px solid ${C.border};border-radius:10px;padding:3px;margin-bottom:6px;overflow-x:auto">`;
+  tabs.forEach(([id,l])=>{ const on=S.fuel===id;
+    h+=`<div data-act="fuel" data-v="${id}" style="flex:1;padding:8px 4px;border-radius:8px;background:${on?C.lime:"transparent"};color:${on?"#0a0a0f":C.muted};font-family:${F.mono};font-size:9.5px;letter-spacing:.04em;font-weight:${on?700:400};cursor:pointer;white-space:nowrap;text-align:center">${l}</div>`; });
+  h+=`</div>`;
+  if(S.fuel==="daily"){
+    h+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px">`;
+    [["Training","2,550",C.blue],["Big/Sim","2,850",C.lime],["Rest","2,150",C.muted]].forEach(([l,k,c])=>{
+      h+=`<div style="background:${C.card};border:1px solid ${c};border-radius:10px;padding:11px 8px;text-align:center"><div style="font-family:${F.mono};font-size:8px;color:${c};text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">${l}</div><div style="font-family:${F.disp};font-size:24px;color:${c};line-height:1">${k}</div><div style="font-family:${F.mono};font-size:8px;color:${C.muted}">kcal</div></div>`; });
+    h+=`</div><div style="display:flex;gap:8px;margin-top:8px;font-family:${F.mono};font-size:11px;justify-content:center;color:${C.text}"><span>P <b style="color:${C.blue}">148g</b></span><span style="color:${C.muted}">·</span><span>C <b style="color:${C.lime}">340–400g</b></span><span style="color:${C.muted}">·</span><span>F <b style="color:${C.orange}">~62g</b></span></div>
+    <div style="background:rgba(71,200,255,.06);border:1px solid rgba(71,200,255,.2);border-radius:10px;padding:11px 12px;margin-top:12px;font-size:12px;color:${C.muted};line-height:1.6">Your desk day + 10k steps already burns ~2,150 kcal before training — so training food goes <b style="color:${C.text}">on top</b>, not instead. Protein anchors ~148g every day; carbs are the lever that moves with the work.</div>`;
+    h+=SH("Training Day on a Plate");
+    [["Pre (5–6am)","2 rice cakes + honey (+ banana on hard mornings)"],["Post-session","Oats 80g + whey + banana + berries + honey — biggest carb hit"],["Lunch","Chicken breast or cod + rice/potatoes + veg (spray oil)"],["Snack","Greek yoghurt + fruit + granola, or cottage cheese + oatcakes"],["Dinner","Prawn or tofu stir-fry + noodles/rice — carbs up before hard days"]].forEach(([k,v])=>h+=row(k,v,C.blue));
+  } else if(S.fuel==="morning"){
+    h+=SH("Early Sessions — your setup");
+    [["Rice cakes + honey","~30–35g carbs — fine for easy/short. Light for hard intervals/engine/sim, so top up."],["Top-up (hard AM)","Add a banana or 2–3 dates, or a small bowl of oats if it sits well. Juice works if solids are hard at 5am."],["The real lever","Night-before carb-rich dinner does most of the work — you train on yesterday's glycogen."],["Straight after","Full breakfast within 60–90 min — biggest carb + protein hit of the day."]].forEach(([k,v])=>h+=row(k,v,C.lime));
+  } else if(S.fuel==="timing"){
+    h+=SH("Carb Timing");
+    [["Before D1/D3/sim","Biggest carb dinner the night before — run on yesterday's carbs."],["Morning of hard runs","Rice cakes + honey + banana on waking, or oats if 90min–2h. Never intervals on empty."],["After every session","Carbs + protein within 60–90 min. Most vital on back-to-back quality days."],["Rest days","Carbs ease back; protein + fat hold. Recovery is training — keep eating."]].forEach(([k,v])=>h+=row(k,v,C.lime));
+    h+=SH("Hydration",C.blue);
+    [["Baseline","2–2.5L/day, more on long or double days."],["Electrolytes","D1, D3, D6 + any 45min+ sweat. Salt your food."],["Check","Urine pale yellow. Dark = behind."]].forEach(([k,v])=>h+=row(k,v,C.blue));
+  } else if(S.fuel==="race"){
+    h+=SH("Race Week (Wk 11)");
+    [["Mon–Wed","Normal training-day targets. Hydrate. Nothing new all week."],["Thu–Fri CARB LOAD","7–8g/kg ≈ 420–480g/day. Carb portion every meal + easy extras (juice, honey, white bread). Protein stays, fat drops a little."],["+1–2kg on scale","That's glycogen + water — the fuel, not fat. Expected and good."],["Fri low fibre","Ease off big salads, cruciferous veg, legumes. White rice over brown."],["Race morning","Breakfast 2.5–3h before · familiar foods · caffeine ~45 min out · sip electrolytes."]].forEach(([k,v])=>h+=row(k,v,C.lime));
+  } else {
+    h+=SH("Are You Eating Enough?",C.orange);
+    h+=`<div style="background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.25);border-radius:10px;padding:12px 13px;font-size:12.5px;color:${C.muted};line-height:1.7">If two or more creep in, <b style="color:${C.text}">eat more — mostly carbs</b>, don't train harder:<div style="margin-top:8px">`;
+    ["WHOOP HRV drifting down / RHR up over several days","Runs stalling or slowing at the same effort","Broken sleep despite fatigue","Always cold — hands &amp; feet","Soreness &amp; niggles that won't clear","Low mood or short fuse","Any change to your cycle"].forEach(x=>h+=`<div style="display:flex;gap:8px;padding:3px 0"><span style="color:${C.orange}">›</span><span>${x}</span></div>`);
+    h+=`</div><div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)">That last one is the clearest low-fuel signal — add fuel and check in with a GP or sports dietitian. At your body-fat level, fuelling up is the fix, and it's not negotiable during hard prep.</div></div>`;
+  }
+  h+=`</div>`;
+  return h;
+}
+
+// ── Body ──
+function body(){
+  const saved=DATA.__body||BODY_SEED;
+  const entries=(saved.entries||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const base=entries[0],latest=entries.length>1?entries[entries.length-1]:null,show=latest||base;
+  const del=(k,inv)=>{ if(!latest||!base)return null; const d=parseFloat(latest[k])-parseFloat(base[k]); if(isNaN(d))return null; return {d,good:inv?d<0:d>0}; };
+  const mets=[["weight","Weight","kg",false,true],["smm","Muscle","kg",false,false],["pbf","Body Fat","%",true,false],["bmr","BMR","kcal",false,false],["vfa","Visceral","cm²",true,false],["score","Score","",false,false]];
+  let h=`<div class="fade"><div style="font-family:${F.disp};font-size:30px;letter-spacing:.03em;color:${C.text}">BODY <span style="color:${C.purple}">TRACKER</span></div>
+    <div style="font-family:${F.mono};font-size:10px;color:${C.muted};margin-bottom:14px">Baseline: InBody ${base?base.date:"—"} · hold, don't cut</div>
+    <div style="font-family:${F.mono};font-size:9px;color:${C.muted};letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px">${latest?"Latest vs Baseline":"Baseline · "+(base?base.date:"")}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px">`;
+  mets.forEach(([k,l,u,inv,neu])=>{ const d=del(k,inv),v=show?show[k]:null;
+    h+=`<div style="background:${C.card};border:1px solid ${C.border};border-radius:10px;padding:10px"><div style="font-family:${F.mono};font-size:8px;color:${C.muted};text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px">${l}</div><div style="font-family:${F.disp};font-size:22px;color:${C.purple};line-height:1">${v||"—"}</div><div style="font-family:${F.mono};font-size:8px;color:${C.muted}">${u}</div>${d?`<div style="font-family:${F.mono};font-size:9px;font-weight:600;margin-top:3px;color:${neu?C.orange:d.good?C.green:C.red}">${d.d>0?"+":""}${d.d.toFixed(1)}${u}</div>`:""}</div>`; });
+  h+=`</div>
+    <div style="background:rgba(192,132,252,.06);border:1px solid rgba(192,132,252,.2);border-radius:10px;padding:11px 12px;margin-bottom:16px;font-size:11.5px;color:${C.muted};line-height:1.6">🎯 <b style="color:${C.text}">Goal this block: hold, don't cut.</b> Aim SMM steady ~28.5–29, body fat steady 13–14%. If fat drifts below ~12% or muscle drops, that's under-fuelling — eat more.</div>
+    <div style="font-family:${F.mono};font-size:9px;color:${C.muted};letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px">Scan cadence</div>`;
+  [["#6aff47","Wk 1 · 31 Aug — Baseline"],["#47c8ff","Wk 5 · ~28 Sep — Mid check"],["#c084fc","Wk 9 · ~26 Oct — Pre-taper"],["#e8ff47","Post-race · late Nov"]].forEach(([c,l])=>{
+    h+=`<div style="display:flex;gap:8px;align-items:center;padding:5px 0"><div style="width:3px;align-self:stretch;background:${c};border-radius:2px;min-height:14px"></div><div style="font-size:12px;color:${C.text}">${l}</div></div>`; });
+  if(entries.length){ h+=`<div style="font-family:${F.mono};font-size:9px;color:${C.muted};letter-spacing:.12em;text-transform:uppercase;margin:16px 0 6px">History</div>`;
+    entries.forEach((en,i)=>{ h+=`<div style="background:${C.card};border:1px solid ${C.border};border-radius:9px;padding:9px 12px;margin-bottom:5px"><div style="font-family:${F.mono};font-size:9px;color:${C.purple};margin-bottom:3px">${i===0?"BASELINE · ":""}${en.date}</div><div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:${C.text}">${en.weight?`<span>⚖ ${en.weight}kg</span>`:""}${en.smm?`<span>💪 ${en.smm} SMM</span>`:""}${en.pbf?`<span>📊 ${en.pbf}%</span>`:""}${en.score?`<span>🔥 ${en.score}</span>`:""}</div></div>`; }); }
+  h+=`<div style="margin-top:16px;background:${C.surface};border:1px solid rgba(192,132,252,.3);border-radius:11px;padding:14px">
+    <div style="font-family:${F.mono};font-size:9px;color:${C.purple};letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px">Log New InBody</div>
+    <input data-bf="date" type="date" value="${new Date().toISOString().split("T")[0]}" style="width:100%;background:${C.card};border:1px solid ${C.border};border-radius:7px;padding:8px 10px;color:${C.text};font-size:12px;outline:none;margin-bottom:8px;box-sizing:border-box"/>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">`;
+  [["weight","Weight kg"],["smm","SMM kg"],["pbf","Body Fat %"],["bmr","BMR"],["vfa","VFA cm²"],["score","Score"]].forEach(([k,l])=>{
+    h+=`<input data-bf="${k}" type="number" inputmode="decimal" placeholder="${l}" style="width:100%;background:${C.card};border:1px solid ${C.border};border-radius:7px;padding:8px;color:${C.text};font-size:13px;outline:none;text-align:center;box-sizing:border-box"/>`; });
+  h+=`</div><button data-act="bodysave" style="width:100%;padding:13px;border-radius:10px;border:1px solid ${C.purple};background:${C.purple};color:#0a0a0f;font-family:${F.disp};font-size:15px;letter-spacing:.06em;cursor:pointer">SAVE ENTRY</button></div></div>`;
+  return h;
+}
+
+// ── Progress ──
+function progress(){
+  let done=0;const total=66;
+  let rows="";
+  for(let w=1;w<=11;w++){ const days=getDays(w);
+    let cells="";
+    days.forEach((d,di)=>{ const c=(DATA[`w${w}d${di}`]||{}).completed; if(c)done++;
+      cells+=`<div data-act="jump" data-w="${w}" data-d="${di}" style="flex:1;height:30px;border-radius:6px;border:1px solid ${c?C.green:C.border};background:${c?"rgba(106,255,71,.18)":d.rest?"rgba(255,255,255,.02)":"transparent"};color:${c?C.green:C.muted};display:flex;align-items:center;justify-content:center;font-family:${F.mono};font-size:9px;font-weight:600;cursor:pointer">${c?"✓":e(d.num)}</div>`; });
+    rows+=`<div style="margin-bottom:8px"><div style="font-family:${F.mono};font-size:9px;color:${phOf(w)===3?C.lime:C.muted};margin-bottom:4px;letter-spacing:.08em">WEEK ${w} · ${PHASES[phOf(w)-1].title}</div><div style="display:flex;gap:4px">${cells}</div></div>`; }
+  const pct=Math.round(done/total*100);
+  return `<div class="fade"><div style="font-family:${F.disp};font-size:30px;letter-spacing:.03em;color:${C.text}">PROGRESS</div>
+    <div style="font-family:${F.mono};font-size:10px;color:${C.muted};margin-bottom:14px">${done} of ${total} sessions · 🏁 ${dtr()} days to race</div>
+    <div style="background:${C.card};border:1px solid ${C.border};border-radius:11px;padding:14px;margin-bottom:16px;text-align:center"><div style="font-family:${F.disp};font-size:44px;color:${C.lime};line-height:1">${pct}%</div><div style="margin:8px 0">${bar(pct,C.lime)}</div><div style="font-family:${F.mono};font-size:10px;color:${C.muted}">programme complete</div></div>${rows}</div>`;
+}
+
+// ── Shell + render ──
+function render(){
+  const TABS=[["train","Train","🏋️"],["fuel","Fuel","🍽️"],["body","Body","📊"],["progress","Progress","📈"]];
+  let inner=S.view==="train"?train():S.view==="fuel"?fuel():S.view==="body"?body():progress();
+  let tabbar=`<div style="position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:rgba(20,20,28,.96);border-top:1px solid ${C.border};display:flex;padding:8px 8px 10px">`;
+  TABS.forEach(([id,l,ic])=>{ const on=S.view===id;
+    tabbar+=`<div data-act="tab" data-v="${id}" style="flex:1;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:${on?C.lime:C.muted}"><span style="font-size:18px;opacity:${on?1:.6}">${ic}</span><span style="font-family:${F.mono};font-size:9px;letter-spacing:.05em">${l}</span></div>`; });
+  tabbar+=`</div>`;
+  document.getElementById("root").innerHTML=
+    `<div style="max-width:480px;margin:0 auto;min-height:100vh;background:${C.bg};color:${C.text}">
+      <div style="padding:16px 16px 12px;border-bottom:1px solid ${C.border};position:sticky;top:0;background:rgba(10,10,15,.94);backdrop-filter:blur(10px);z-index:10">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div style="font-family:${F.disp};font-size:26px;letter-spacing:.04em">HYROX <span style="color:${C.lime}">SOLO</span></div>
+          <div style="font-family:${F.mono};font-size:11px;color:${C.lime}">🏁 ${dtr()}d</div></div>
+        <div style="font-family:${F.mono};font-size:9.5px;color:${C.muted};letter-spacing:.06em">SUB 1:20 · FIRST SOLO · 14 NOV 2026</div>
+      </div>
+      <div style="padding:16px 16px 90px">${inner}</div>
+      ${tabbar}
+    </div>`;
+}
+
+// ── Events ──
+document.addEventListener("click",ev=>{
+  const t=ev.target.closest("[data-act]"); if(!t) return;
+  const a=t.getAttribute("data-act"),v=t.getAttribute("data-v"),dk=`w${S.week}d${S.day}`;
+  if(a==="tab"){S.view=v;render();}
+  else if(a==="fuel"){S.fuel=v;render();}
+  else if(a==="week"){S.week=+v;S.day=0;render();}
+  else if(a==="day"){S.day=+v;render();}
+  else if(a==="jump"){S.week=+t.getAttribute("data-w");S.day=+t.getAttribute("data-d");S.view="train";render();}
+  else if(a==="ex"){ const id=t.getAttribute("data-id");const d=DATA[dk]||{};const done={...(d.done||{})};done[id]=!done[id];DATA[dk]={...d,done};persist();render(); }
+  else if(a==="round"){ const si=+t.getAttribute("data-si"),ri=+t.getAttribute("data-ri");const d=DATA[dk]||{};const fins={...(d.fins||{})};const arr=[...(fins[si]||[])];arr[ri]=!arr[ri];fins[si]=arr;DATA[dk]={...d,fins};persist();render(); }
+  else if(a==="complete"){ const d=DATA[dk]||{};DATA[dk]={...d,completed:!d.completed,completedAt:!d.completed?new Date().toISOString():null};persist();render(); }
+  else if(a==="bodysave"){
+    const root=document.getElementById("root");const g=k=>{const el=root.querySelector(`[data-bf="${k}"]`);return el?el.value:"";};
+    if(!g("weight")) return;
+    const saved=DATA.__body||JSON.parse(JSON.stringify(BODY_SEED));
+    const en={date:g("date"),weight:g("weight"),smm:g("smm"),pbf:g("pbf"),bmr:g("bmr"),vfa:g("vfa"),score:g("score")};
+    const entries=[...(saved.entries||[]),en].sort((x,y)=>x.date.localeCompare(y.date));
+    DATA.__body={...saved,entries};persist();render();
+  }
+});
+// notes (no re-render, keep focus)
+document.addEventListener("input",ev=>{
+  const t=ev.target; if(t.getAttribute&&t.getAttribute("data-field")==="note"){
+    const dk=t.getAttribute("data-dk");const d=DATA[dk]||{};DATA[dk]={...d,note:t.value};persist();
+  }
+});
+
+render();
+
+}catch(e){var d=document.getElementById("err");if(d){d.style.display="block";d.textContent="Error:\n"+(e&&e.stack?e.stack:e);}}
+</script>
+</body>
+</html>
