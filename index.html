@@ -17,6 +17,10 @@
   input,textarea{font-family:'DM Mono',monospace}
   .fade{animation:fade .22s ease}
   @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @keyframes conffall{to{transform:translateY(115vh) rotate(var(--rot,360deg));opacity:.15}}
+  @keyframes pop{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+  @keyframes ovin{from{opacity:0}to{opacity:1}}
+  @keyframes ovout{from{opacity:1}to{opacity:0}}
   [data-act]:active{opacity:.7}
   #err{display:none;color:#ff6b6b;font-family:monospace;font-size:11px;white-space:pre-wrap;padding:20px;line-height:1.5}
 </style>
@@ -460,21 +464,65 @@ function progress(){
 function render(){
   const TABS=[["train","Train","🏋️"],["fuel","Fuel","🍽️"],["body","Body","📊"],["progress","Progress","📈"]];
   let inner=S.view==="train"?train():S.view==="fuel"?fuel():S.view==="body"?body():progress();
-  let tabbar=`<div style="position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:rgba(20,20,28,.96);border-top:1px solid ${C.border};display:flex;padding:8px 8px 10px">`;
+  let tabbar=`<div style="position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:rgba(20,20,28,.96);border-top:1px solid ${C.border};display:flex;padding:8px 8px calc(env(safe-area-inset-bottom) + 10px)">`;
   TABS.forEach(([id,l,ic])=>{ const on=S.view===id;
     tabbar+=`<div data-act="tab" data-v="${id}" style="flex:1;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;color:${on?C.lime:C.muted}"><span style="font-size:18px;opacity:${on?1:.6}">${ic}</span><span style="font-family:${F.mono};font-size:9px;letter-spacing:.05em">${l}</span></div>`; });
   tabbar+=`</div>`;
   document.getElementById("root").innerHTML=
     `<div style="max-width:480px;margin:0 auto;min-height:100vh;background:${C.bg};color:${C.text}">
-      <div style="padding:16px 16px 12px;border-bottom:1px solid ${C.border};position:sticky;top:0;background:rgba(10,10,15,.94);backdrop-filter:blur(10px);z-index:10">
+      <div style="padding:calc(env(safe-area-inset-top) + 14px) 16px 12px;border-bottom:1px solid ${C.border};position:sticky;top:0;background:rgba(10,10,15,.94);backdrop-filter:blur(10px);z-index:10">
         <div style="display:flex;justify-content:space-between;align-items:baseline">
           <div style="font-family:${F.disp};font-size:26px;letter-spacing:.04em">HYROX <span style="color:${C.lime}">SOLO</span></div>
           <div style="font-family:${F.mono};font-size:11px;color:${C.lime}">🏁 ${dtr()}d</div></div>
         <div style="font-family:${F.mono};font-size:9.5px;color:${C.muted};letter-spacing:.06em">SUB 1:20 · FIRST SOLO · 14 NOV 2026</div>
       </div>
-      <div style="padding:16px 16px 90px">${inner}</div>
+      <div style="padding:16px 16px calc(env(safe-area-inset-bottom) + 96px)">${inner}</div>
       ${tabbar}
     </div>`;
+}
+
+// ── Celebration ──
+function weekComplete(w){ return getDays(w).every((d,i)=> d.rest || (DATA[`w${w}d${i}`]||{}).completed ); }
+function totalDone(){ let n=0; for(let w=1;w<=11;w++){ getDays(w).forEach((d,i)=>{ if((DATA[`w${w}d${i}`]||{}).completed) n++; }); } return n; }
+function tierFor(week,day){
+  const days=getDays(week), wc=weekComplete(week);
+  const count=`Session ${totalDone()} of 66 · 🏁 ${dtr()}d to race`;
+  let t;
+  if(week===11 && wc)               t={title:"READY TO RACE",emoji:"🏆",sub:"11 weeks done · go get sub-1:20",accent:C.lime,confetti:150,big:true};
+  else if((week===4||week===8)&&wc) t={title:"PHASE COMPLETE",emoji:"💪",sub:(week===4?"Engine Base banked":"Compromised block banked"),accent:C.purple,confetti:95,big:true};
+  else if(week===9 && day===5)      t={title:"RACE SIM DONE",emoji:"🎯",sub:"Your first solo — in training · log your time",accent:C.blue,confetti:85,big:true};
+  else if(wc)                       t={title:"WEEK "+week+" DONE",emoji:"🔥",sub:PHASES[phOf(week)-1].title,accent:C.lime,confetti:65};
+  else { const d=days[day];         t={title:"SESSION DONE",emoji:"🎉",sub:"Week "+week+" · "+d.num+" · "+d.name,accent:C.lime,confetti:38}; }
+  t.count=count; return t;
+}
+function fireConfetti(box,n){
+  const cols=[C.lime,C.blue,C.purple,C.orange,C.green,"#ffffff"];
+  for(let i=0;i<n;i++){
+    const p=document.createElement("span");
+    const x=Math.random()*100,dur=1.8+Math.random()*1.7,delay=Math.random()*0.5;
+    const w=6+Math.random()*6,h=9+Math.random()*10,rot=((Math.random()*720-360)|0)+"deg";
+    p.style.cssText=`position:absolute;left:${x}%;top:-24px;width:${w}px;height:${h}px;background:${cols[i%cols.length]};border-radius:${i%4===0?"50%":"1px"};opacity:.9;animation:conffall ${dur}s linear ${delay}s forwards`;
+    p.style.setProperty("--rot",rot);
+    box.appendChild(p);
+  }
+}
+function celebrate(t){
+  const old=document.getElementById("celebrate"); if(old) old.remove();
+  const wrap=document.createElement("div"); wrap.id="celebrate";
+  wrap.style.cssText="position:fixed;inset:0;z-index:100;background:rgba(8,8,12,.86);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden;animation:ovin .25s ease";
+  const conf=document.createElement("div"); conf.style.cssText="position:absolute;inset:0;pointer-events:none"; wrap.appendChild(conf);
+  const card=document.createElement("div");
+  card.style.cssText=`position:relative;width:320px;max-width:100%;background:linear-gradient(180deg,#16161f,#101017);border:1px solid ${t.accent}66;border-radius:22px;padding:26px 22px 22px;text-align:center;box-shadow:0 0 60px ${t.accent}22`;
+  card.innerHTML=`<div style="width:74px;height:74px;border-radius:50%;background:${t.accent};display:flex;align-items:center;justify-content:center;margin:0 auto 4px;box-shadow:0 0 30px ${t.accent}88;animation:pop .45s ease"><span style="font-size:40px;color:#0a0a0f;font-weight:800;line-height:1">✓</span></div>
+    <div style="font-size:26px;margin:6px 0 2px">${t.emoji}</div>
+    <div style="font-family:${F.disp};font-size:${t.big?38:34}px;letter-spacing:.04em;color:${C.text};line-height:1.02">${t.title}</div>
+    <div style="font-family:${F.mono};font-size:10px;color:${t.accent};letter-spacing:.1em;text-transform:uppercase;margin-top:7px">${t.sub}</div>
+    <div style="font-family:${F.mono};font-size:11px;color:${C.muted};margin-top:5px">${t.count}</div>
+    <button data-close="1" style="margin-top:18px;width:100%;padding:13px;border-radius:11px;border:none;background:${t.accent};color:#0a0a0f;font-family:${F.disp};font-size:17px;letter-spacing:.06em;cursor:pointer">KEEP GOING →</button>`;
+  wrap.appendChild(card);
+  wrap.addEventListener("click",ev=>{ if(ev.target===wrap||ev.target.getAttribute("data-close")){ wrap.style.animation="ovout .2s ease forwards"; setTimeout(()=>wrap.remove(),190); } });
+  document.body.appendChild(wrap);
+  fireConfetti(conf,t.confetti);
 }
 
 // ── Events ──
@@ -488,7 +536,7 @@ document.addEventListener("click",ev=>{
   else if(a==="jump"){S.week=+t.getAttribute("data-w");S.day=+t.getAttribute("data-d");S.view="train";render();}
   else if(a==="ex"){ const id=t.getAttribute("data-id");const d=DATA[dk]||{};const done={...(d.done||{})};done[id]=!done[id];DATA[dk]={...d,done};persist();render(); }
   else if(a==="round"){ const si=+t.getAttribute("data-si"),ri=+t.getAttribute("data-ri");const d=DATA[dk]||{};const fins={...(d.fins||{})};const arr=[...(fins[si]||[])];arr[ri]=!arr[ri];fins[si]=arr;DATA[dk]={...d,fins};persist();render(); }
-  else if(a==="complete"){ const d=DATA[dk]||{};DATA[dk]={...d,completed:!d.completed,completedAt:!d.completed?new Date().toISOString():null};persist();render(); }
+  else if(a==="complete"){ const d=DATA[dk]||{};const now=!d.completed;DATA[dk]={...d,completed:now,completedAt:now?new Date().toISOString():null};persist();render(); if(now) celebrate(tierFor(S.week,S.day)); }
   else if(a==="bodysave"){
     const root=document.getElementById("root");const g=k=>{const el=root.querySelector(`[data-bf="${k}"]`);return el?el.value:"";};
     if(!g("weight")) return;
