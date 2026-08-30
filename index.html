@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="HYROX Solo"/>
 <title>HYROX Solo — Sub 1:20</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<link rel="icon" type="image/png" href="icon-192.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
   *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -22,7 +25,6 @@
   @keyframes ovin{from{opacity:0}to{opacity:1}}
   @keyframes ovout{from{opacity:1}to{opacity:0}}
   [data-act]:active{opacity:.7}
-  #err{display:none;color:#ff6b6b;font-family:monospace;font-size:11px;white-space:pre-wrap;padding:20px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -182,7 +184,7 @@ function getDays(w){
      name:"Run Intervals",title:"Run Intervals — "+iv.s,secs:[
       {lbl:"Warm-Up · 12 min",exs:[
         {id:"d1a",ic:"🏃",n:"Easy jog",s:"8 min",note:"Conversational · gradual build"},
-        {id:"d1b",ic:"⚡",n:"Drills: A-skips · high knees · butt kicks",s:"2×20m",note:""},
+        {id:"d1b",ic:"⚡",n:"Drills: A-skips · high knees · butt kicks",s:"2×20m ea",note:"Each drill, quality over speed"},
         {id:"d1c",ic:"💨",n:"Strides to interval pace",s:"4×60m",note:"Walk-back recovery"}]},
       {lbl:"Main Set — tick each rep",exs:[
         {id:"d1m",ic:"🎯",n:"Intervals",s:iv.s,note:iv.pace+" · "+iv.rec+" between reps · "+iv.note}]},
@@ -195,8 +197,8 @@ function getDays(w){
     {num:"D2",tag:"lower",c:C.purple,dur:"55 min",int:85,kcal:KC.train,calNote:"Normal carbs · this day builds the sled + lunges",
      name:"Lower + Sled",title:"Lower Strength + Sled Power",secs:[
       {lbl:"Warm-Up · 6 min",exs:[
-        {id:"d2a",ic:"🚴",n:"Bike + leg swings",s:"4 min",note:""},
-        {id:"d2b",ic:"🍑",n:"Banded glute bridges + clamshells",s:"2×12",note:""}]},
+        {id:"d2a",ic:"🚴",n:"Bike + leg swings",s:"5 min",note:"3 min easy spin + 10 leg swings/side + 10 hip circles/side"},
+        {id:"d2b",ic:"🍑",n:"Banded glute bridges + clamshells",s:"2×12 ea",note:"Wake the glutes up before loading"}]},
       {lbl:"Strength · 18 min",exs:[
         {id:"d2c",ic:"🏋️",n:p===1?"Back Squat":p===2?"Trap Bar Deadlift":"Trap Bar Speed Pull",s:p===1?"4×5":p===2?"4×4":"4×3",note:p===1?strNote:p===2?"Explosive · 3 box jumps after each set":"60–70% · fastest pull · 3 box jumps after"},
         {id:"d2d",ic:"🦵",n:p===1?"Romanian Deadlift":p===2?"Bulgarian Split Squat":"Weighted Step-Up",s:p===1?"3×8":p===2?"3×8/side":"3×10/side",note:p===1?"Hinge deep · loads the sled pull":"Single-leg strength = running economy"}]},
@@ -213,7 +215,7 @@ function getDays(w){
     {num:"D3",tag:"hybrid",c:C.lime,dur:"50 min",int:92,kcal:KC.big,calNote:"Carbs up · hardest engine day of the week",
      name:"HYROX Engine",title:p===1?"Station Skills + Brick":p===2?"Compromised Running":"Race-Pace Brick",secs:(
       p===1?[
-        {lbl:"Warm-Up · 6 min",exs:[{id:"d3a",ic:"🏃",n:"400m jog + dynamic mobility",s:"6 min",note:"Inchworms · hip hinges · arm circles"}]},
+        {lbl:"Warm-Up · 6 min",exs:[{id:"d3a",ic:"🏃",n:"400m jog + dynamic mobility",s:"6 min",note:"Inchworms ×5 · hip hinges ×10 · arm circles ×10/dir"}]},
         {lbl:"Station Skills — race weights · 18 min",exs:[
           {id:"d3b",ic:"🏐",n:"Wall Ball @ 4kg",s:"3×20",note:"Unbroken · full depth · goal: build to 100 by Phase 3"},
           {id:"d3c",ic:"🐸",n:"Burpee Broad Jump",s:"2×20m",note:"Step-down burpee · long low jump · pace it"},
@@ -221,12 +223,12 @@ function getDays(w){
         {lbl:"Brick — 3 rounds",fin:true,rounds:"3 rounds",cs:[{n:"Row",v:"500m"},{n:"Run @ "+d3Pace,v:"400m"},{n:"Wall balls @ 4kg",v:"12"},{n:"Rest",v:"90s"}]},
         {lbl:"Core · 5 min",exs:[{id:"d3e",ic:"🎯",n:"Hollow rock",s:"3×10",note:""},{id:"d3f",ic:"🎯",n:"Dead bug",s:"3×8/side",note:"Low back flat"}]},
       ]:p===2?[
-        {lbl:"Warm-Up · 6 min",exs:[{id:"d3a",ic:"🏃",n:"400m jog + dynamic mobility",s:"6 min",note:""}]},
+        {lbl:"Warm-Up · 6 min",exs:[{id:"d3a",ic:"🏃",n:"400m jog + dynamic mobility",s:"6 min",note:"Inchworms ×5 · leg swings ×10/side · arm circles ×10/dir"}]},
         {lbl:"Block A — 4 rounds",fin:true,rounds:"4 rounds",cs:[{n:"Ski erg",v:"750m"},{n:"Run @ "+d3Pace,v:"400m"},{n:"Rest",v:"60s"}]},
         {lbl:"Block B — 3 rounds",fin:true,rounds:"3 rounds",cs:[{n:"Burpee broad jumps",v:"10"},{n:"Run @ "+d3Pace,v:"400m"},{n:"Rest",v:"60s"}]},
         {lbl:"Core · 5 min",exs:[{id:"d3e",ic:"🎯",n:"Hanging knee raise",s:"3×10",note:""},{id:"d3f",ic:"🎯",n:"Dead bug",s:"3×8/side",note:""}]},
       ]:[
-        {lbl:"Warm-Up · 6 min",exs:[{id:"d3a",ic:"🏃",n:"400m jog + dynamic mobility",s:"6 min",note:""}]},
+        {lbl:"Warm-Up · 6 min",exs:[{id:"d3a",ic:"🏃",n:"400m jog + dynamic mobility",s:"6 min",note:"Inchworms ×5 · leg swings ×10/side · arm circles ×10/dir"}]},
         {lbl:"Race-Pace Brick — 4 rounds · station changes",fin:true,rounds:"4 rounds",cs:[
           {n:"Every round: Run @ "+d3Pace,v:"1km"},{n:"R1: Ski",v:"750m"},{n:"R2: Wall balls @ 4kg",v:"25"},{n:"R3: Row",v:"750m"},{n:"R4: Burpee broad jump",v:"20"}]},
         {lbl:"Sled Touch-Up · 8 min",exs:[{id:"d3g",ic:"🛷",n:"Sled push 12.5m + pull 12.5m @ race wt",s:"2×",note:"Fast + clean · full rest"}]},
@@ -236,7 +238,7 @@ function getDays(w){
     // D4 UPPER + STATIONS
     {num:"D4",tag:"upper",c:C.orange,dur:"55 min",int:80,kcal:KC.train,calNote:"Grip, carries, wall balls — the stations you own on race day",
      name:"Upper + Stations",title:"Upper Strength + Station Work",secs:[
-      {lbl:"Warm-Up · 5 min",exs:[{id:"d4a",ic:"🔄",n:"Band pull-aparts + scap pull-ups",s:"2×12",note:""}]},
+      {lbl:"Warm-Up · 5 min",exs:[{id:"d4a",ic:"🔄",n:"Band pull-aparts + scap pull-ups",s:"2×12 ea",note:"Prime the pulling muscles"}]},
       {lbl:"Strength Superset · 16 min",exs:[
         {id:"d4b",ic:"💪",n:p===3?"DB Push Press":"Push Press",s:p===3?"3×5":"4×5",note:strNote+" · leg drive into lockout"},
         {id:"d4c",ic:"🔙",n:"Pull-Ups (band if needed)",s:p===3?"3×6":"4×6",note:"Full ROM · controlled eccentric"}]},
@@ -280,7 +282,6 @@ const BODY_SEED = {
   nextScanDate:"2026-08-31",
 };
 
-
 // ═══ VANILLA APP · zero external dependencies ════════════════════════════════
 const store = (()=>{ let mem={}; try{const t="__t";localStorage.setItem(t,"1");localStorage.removeItem(t);
   return {get:k=>{try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
@@ -291,6 +292,11 @@ function persist(){store.set(LS,JSON.stringify(DATA));}
 const S={view:"train",week:1,day:0,fuel:"daily"};
 
 const dtr=()=>Math.max(0,Math.ceil((RACE_DATE-new Date())/86400000));
+const START=new Date("2026-09-01T00:00:00");
+function sessionDate(week,day){ const d=new Date(START); d.setDate(d.getDate()+(week-1)*7+day); return d; }
+function relDay(dt){ const t=new Date(); t.setHours(0,0,0,0); const dd=Math.round((dt-t)/86400000); return dd===0?"today":dd>0?`in ${dd} day${dd>1?"s":""}`:`${-dd} day${dd<-1?"s":""} ago`; }
+const fmtDate=dt=>dt.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
+const TAGEMO={cond:"🏃",lower:"🦵",upper:"💪",hybrid:"🔥",rest:"🛌"};
 const TAGS={cond:"RUN",lower:"LOWER",upper:"UPPER",hybrid:"ENGINE",rest:"REST"};
 const F={disp:"'Bebas Neue','Arial Narrow',system-ui,sans-serif",mono:"'DM Mono','SFMono-Regular',Menlo,monospace"};
 const e=s=>(s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
@@ -332,7 +338,14 @@ function dayCard(day,dk){
     } else {
       h+=`<div style="margin-top:14px"><div style="font-family:${F.mono};font-size:9px;color:${C.muted};letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">${e(sec.lbl)}</div>`;
       sec.exs.forEach(ex=>{ const done=!!(dd.done||{})[ex.id];
-        h+=`<div data-act="ex" data-id="${ex.id}" style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;opacity:${done?.5:1}">
+        const WEIGHTED=/squat|deadlift|speed pull|sled|farmer|lunge|wall ball|hip thrust|push press|\brow\b|pulldown|step-?up|split squat/i;
+        const isWt=WEIGHTED.test(ex.n);
+        const wkey=ex.n.replace(/\s*@.*$/,"").trim().toLowerCase();
+        const own=(dd.w||{}), gd=(DATA.weights||{});
+        const wv=(ex.id in own)?own[ex.id]:(wkey in gd?gd[wkey]:"");
+        const tgt=(ex.n+" "+(ex.note||"")).match(/(\d+×\d+|\d+)\s*kg/i);
+        const ph=tgt?tgt[1]:"kg";
+        h+=`<div data-act="ex" data-id="${ex.id}" style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;opacity:${done?.5:1}">
           <div style="width:22px;height:22px;border-radius:6px;border:1.5px solid ${done?C.green:C.muted};background:${done?C.green:"transparent"};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#0a0a0f;font-weight:700;margin-top:1px">${done?"✓":""}</div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
@@ -340,6 +353,11 @@ function dayCard(day,dk){
               ${ex.s&&ex.s!=="—"?`<span style="font-family:${F.mono};font-size:11px;color:${C.lime};font-weight:600;white-space:nowrap;flex-shrink:0">${e(ex.s)}</span>`:""}
             </div>
             ${ex.note?`<div style="font-size:11px;color:${C.muted};line-height:1.45;margin-top:2px">${e(ex.note)}</div>`:""}
+            ${isWt?`<div style="display:flex;align-items:center;gap:7px;margin-top:6px">
+              <span style="font-family:${F.mono};font-size:8.5px;color:${C.muted};letter-spacing:.1em">LOAD</span>
+              <input type="text" inputmode="decimal" data-w="${ex.id}" data-wkey="${e(wkey)}" data-dk="${dk}" value="${e(wv)}" placeholder="${e(ph)}" style="width:70px;background:${C.bg};border:1px solid ${wv?C.purple:C.border};border-radius:7px;padding:5px 8px;color:${C.text};font-family:${F.mono};font-size:12px;text-align:center;outline:none"/>
+              <span style="font-family:${F.mono};font-size:10px;color:${C.muted}">kg</span>
+            </div>`:""}
           </div></div>`; });
       h+=`</div>`;
     }
@@ -383,10 +401,10 @@ function train(){
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px">
       <span style="font-family:${F.disp};font-size:17px;color:${C.text};letter-spacing:.04em">${e(note.h)}</span>
       <span style="font-family:${F.mono};font-size:9px;color:${C.blue};white-space:nowrap">${e(note.rpe)}</span></div>
-    <div style="font-family:${F.mono};font-size:11px;color:${C.blue};margin-bottom:3px">🏃 ${e(note.run)}</div>
-    <div style="font-family:${F.mono};font-size:9px;color:${C.muted}">${e(ph.title)} · rest ${e(note.rest)} · 🏁 ${dtr()} days to race</div>
-  </div>
-  <div style="display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap">`;
+    <div style="font-family:${F.mono};font-size:11px;color:${C.blue};margin-bottom:3px">${TAGEMO[cur.tag]||"•"} ${e(cur.name)}${cur.dur?" · "+e(cur.dur):""}${cur.tag==="cond"&&!cur.rest?" · "+e(note.run.split(" · ")[0]):""}</div>
+    <div style="font-family:${F.mono};font-size:9px;color:${C.muted}">${e(fmtDate(sessionDate(S.week,S.day)))} · ${relDay(sessionDate(S.week,S.day))} · rest ${e(note.rest)} · 🏁 ${dtr()}d</div>
+  </div>`;
+  h+=`<div style="display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap">`;
   days.forEach((d,i)=>{ const dk=`w${S.week}d${i}`,done=(DATA[dk]||{}).completed,on=i===S.day;
     h+=`<div data-act="day" data-v="${i}" style="flex:1 1 0;min-width:38px;padding:9px 2px;border-radius:9px;border:1px solid ${on?d.c:C.border};background:${on?d.c:done?"rgba(106,255,71,.1)":"transparent"};color:${on?"#0a0a0f":done?C.green:C.muted};cursor:pointer;font-family:${F.mono};font-weight:700;font-size:12px;text-align:center;position:relative">${e(d.num)}${done&&!on?`<span style="position:absolute;top:2px;right:4px;font-size:8px">✓</span>`:""}</div>`; });
   h+=`</div>`+dayCard(cur,`w${S.week}d${S.day}`);
@@ -545,6 +563,7 @@ function celebrate(t){
 
 // ── Events ──
 document.addEventListener("click",ev=>{
+  if(ev.target && ev.target.matches && ev.target.matches("input,textarea")) return;
   const t=ev.target.closest("[data-act]"); if(!t) return;
   const a=t.getAttribute("data-act"),v=t.getAttribute("data-v"),dk=`w${S.week}d${S.day}`;
   if(a==="tab"){S.view=v;render();}
@@ -565,16 +584,26 @@ document.addEventListener("click",ev=>{
     DATA.__body={...saved,entries};persist();render();
   }
 });
-// notes (no re-render, keep focus)
+// inputs (no re-render, keep focus)
 document.addEventListener("input",ev=>{
-  const t=ev.target; if(t.getAttribute&&t.getAttribute("data-field")==="note"){
+  const t=ev.target; if(!t.getAttribute) return;
+  if(t.getAttribute("data-field")==="note"){
     const dk=t.getAttribute("data-dk");const d=DATA[dk]||{};DATA[dk]={...d,note:t.value};persist();
+  } else if(t.hasAttribute("data-w")){
+    const dk=t.getAttribute("data-dk"),id=t.getAttribute("data-w"),key=t.getAttribute("data-wkey"),val=t.value;
+    const d=DATA[dk]||{};const w={...(d.w||{})};w[id]=val;DATA[dk]={...d,w};
+    DATA.weights=DATA.weights||{}; if(val!=="") DATA.weights[key]=val; else delete DATA.weights[key];
+    persist();
+    t.style.borderColor = val ? C.purple : C.border;
   }
 });
 
 render();
 
 }catch(e){var d=document.getElementById("err");if(d){d.style.display="block";d.textContent="Error:\n"+(e&&e.stack?e.stack:e);}}
+</script>
+<script>
+if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}
 </script>
 </body>
 </html>
