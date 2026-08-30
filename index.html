@@ -203,8 +203,8 @@ function getDays(w){
         {id:"d2c",ic:"🏋️",n:p===1?"Back Squat":p===2?"Trap Bar Deadlift":"Trap Bar Speed Pull",s:p===1?"4×5":p===2?"4×4":"4×3",note:p===1?strNote:p===2?"Explosive · 3 box jumps after each set":"60–70% · fastest pull · 3 box jumps after"},
         {id:"d2d",ic:"🦵",n:p===1?"Romanian Deadlift":p===2?"Bulgarian Split Squat":"Weighted Step-Up",s:p===1?"3×8":p===2?"3×8/side":"3×10/side",note:p===1?"Hinge deep · loads the sled pull":"Single-leg strength = running economy"}]},
       {lbl:"Sled · 15 min",exs:[
-        {id:"d2e",ic:"🛷",n:"Sled Push",s:"4×12.5m",note:p===1?"Moderate · low drive · small fast steps":p===2?"HEAVIER than race (102kg+) · grind it":"Race weight 102kg · fast race position"},
-        {id:"d2f",ic:p===1?"🍑":"🛷",n:p===1?"Barbell Hip Thrust":"Sled Pull",s:p===1?"3×10":"3×12.5m",note:p===1?"Glute drive powers every station":"78kg race weight · low hips · hand-over-hand"}]},
+        {id:"d2e",ic:"🛷",n:"Sled Push",s:"4×12.5m",note:p===1?"~60–70% of the 102kg race sled · low drive · small fast steps":p===2?"Above the 102kg race weight if you can · grind it":"Full race weight: 102kg · fast race position"},
+        {id:"d2f",ic:p===1?"🍑":"🛷",n:p===1?"Barbell Hip Thrust":"Sled Pull",s:p===1?"3×10":"3×12.5m",note:p===1?"Glute drive powers every station":"Full race weight: 78kg · low hips · hand-over-hand"}]},
       {lbl:"Accessory · 8 min",exs:[
         {id:"d2g",ic:"🦵",n:"Standing Calf Raise",s:"3×15",note:"Runners' insurance · pause at top"},
         {id:"d2h",ic:"🎯",n:"Pallof Press",s:"3×12/side",note:"Anti-rotation for carries + lunges"}]},
@@ -338,13 +338,17 @@ function dayCard(day,dk){
     } else {
       h+=`<div style="margin-top:14px"><div style="font-family:${F.mono};font-size:9px;color:${C.muted};letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px">${e(sec.lbl)}</div>`;
       sec.exs.forEach(ex=>{ const done=!!(dd.done||{})[ex.id];
-        const WEIGHTED=/squat|deadlift|speed pull|sled|farmer|lunge|wall ball|hip thrust|push press|\brow\b|pulldown|step-?up|split squat/i;
-        const isWt=WEIGHTED.test(ex.n);
+        const varLift=/squat|deadlift|speed pull|sled|hip thrust|push press|\brow\b|pulldown|step-?up|split squat|farmer/i;
+        const isVar=varLift.test(ex.n);
+        const RACEWT=[[/sled push/i,"102kg"],[/sled pull/i,"78kg"],[/farmer/i,"2×16kg"],[/wall ball/i,"4kg"],[/sandbag lunge/i,"10kg"]];
+        let raceRef=null; for(const rw of RACEWT){ if(rw[0].test(ex.n)){ raceRef=rw[1]; break; } }
         const wkey=ex.n.replace(/\s*@.*$/,"").trim().toLowerCase();
-        const own=(dd.w||{}), gd=(DATA.weights||{});
-        const wv=(ex.id in own)?own[ex.id]:(wkey in gd?gd[wkey]:"");
-        const tgt=(ex.n+" "+(ex.note||"")).match(/(\d+×\d+|\d+)\s*kg/i);
-        const ph=tgt?tgt[1]:"kg";
+        const rawOwn=(dd.w||{})[ex.id], rawGd=(DATA.weights||{})[wkey];
+        const own=Array.isArray(rawOwn)?rawOwn:(rawOwn!=null?[rawOwn]:null);
+        const gd =Array.isArray(rawGd)?rawGd:(rawGd!=null?[rawGd]:null);
+        const vals=own||gd||[];
+        const ph="kg";
+        const setM=(ex.s||"").match(/^(\d+)\s*[×x]/); const nSets=Math.min(setM?+setM[1]:1,6);
         h+=`<div data-act="ex" data-id="${ex.id}" style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);cursor:pointer;opacity:${done?.5:1}">
           <div style="width:22px;height:22px;border-radius:6px;border:1.5px solid ${done?C.green:C.muted};background:${done?C.green:"transparent"};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#0a0a0f;font-weight:700;margin-top:1px">${done?"✓":""}</div>
           <div style="flex:1;min-width:0">
@@ -353,10 +357,12 @@ function dayCard(day,dk){
               ${ex.s&&ex.s!=="—"?`<span style="font-family:${F.mono};font-size:11px;color:${C.lime};font-weight:600;white-space:nowrap;flex-shrink:0">${e(ex.s)}</span>`:""}
             </div>
             ${ex.note?`<div style="font-size:11px;color:${C.muted};line-height:1.45;margin-top:2px">${e(ex.note)}</div>`:""}
-            ${isWt?`<div style="display:flex;align-items:center;gap:7px;margin-top:6px">
-              <span style="font-family:${F.mono};font-size:8.5px;color:${C.muted};letter-spacing:.1em">LOAD</span>
-              <input type="text" inputmode="decimal" data-w="${ex.id}" data-wkey="${e(wkey)}" data-dk="${dk}" value="${e(wv)}" placeholder="${e(ph)}" style="width:70px;background:${C.bg};border:1px solid ${wv?C.purple:C.border};border-radius:7px;padding:5px 8px;color:${C.text};font-family:${F.mono};font-size:12px;text-align:center;outline:none"/>
-              <span style="font-family:${F.mono};font-size:10px;color:${C.muted}">kg</span>
+            ${(isVar||raceRef)?`<div data-noex="1" style="margin-top:7px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${isVar?"5px":"0"}">
+                <span style="font-family:${F.mono};font-size:8.5px;color:${C.muted};letter-spacing:.1em">${isVar?"LOAD PER SET · kg":"LOAD"}</span>
+                ${raceRef?`<span style="font-family:${F.mono};font-size:8.5px;color:${C.orange};border:1px solid ${C.orange}55;border-radius:5px;padding:2px 6px;letter-spacing:.06em">RACE ${e(raceRef)}</span>`:""}
+              </div>
+              ${isVar?`<div style="display:flex;gap:5px;flex-wrap:wrap">${Array.from({length:nSets}).map((_,si)=>{const val=vals[si]!=null?vals[si]:"";return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px"><input type="text" inputmode="decimal" data-w="${ex.id}" data-wkey="${e(wkey)}" data-dk="${dk}" data-set="${si}" data-nsets="${nSets}" value="${e(val)}" placeholder="${e(ph)}" style="width:48px;background:${C.bg};border:1px solid ${val?C.purple:C.border};border-radius:7px;padding:5px 4px;color:${C.text};font-family:${F.mono};font-size:12px;text-align:center;outline:none"/><span style="font-family:${F.mono};font-size:8px;color:${C.muted}">${si+1}</span></div>`;}).join("")}</div>`:""}
             </div>`:""}
           </div></div>`; });
       h+=`</div>`;
@@ -572,7 +578,7 @@ document.addEventListener("click",ev=>{
   else if(a==="phase"){S.week=[1,5,9][+v-1];S.day=0;render();}
   else if(a==="day"){S.day=+v;render();}
   else if(a==="jump"){S.week=+t.getAttribute("data-w");S.day=+t.getAttribute("data-d");S.view="train";render();}
-  else if(a==="ex"){ const id=t.getAttribute("data-id");const d=DATA[dk]||{};const done={...(d.done||{})};done[id]=!done[id];DATA[dk]={...d,done};persist();render(); }
+  else if(a==="ex"){ if(ev.target.closest("[data-noex]")) return; const id=t.getAttribute("data-id");const d=DATA[dk]||{};const done={...(d.done||{})};done[id]=!done[id];DATA[dk]={...d,done};persist();render(); }
   else if(a==="round"){ const si=+t.getAttribute("data-si"),ri=+t.getAttribute("data-ri");const d=DATA[dk]||{};const fins={...(d.fins||{})};const arr=[...(fins[si]||[])];arr[ri]=!arr[ri];fins[si]=arr;DATA[dk]={...d,fins};persist();render(); }
   else if(a==="complete"){ const d=DATA[dk]||{};const now=!d.completed;DATA[dk]={...d,completed:now,completedAt:now?new Date().toISOString():null};persist();render(); if(now) celebrate(tierFor(S.week,S.day)); }
   else if(a==="bodysave"){
@@ -590,9 +596,11 @@ document.addEventListener("input",ev=>{
   if(t.getAttribute("data-field")==="note"){
     const dk=t.getAttribute("data-dk");const d=DATA[dk]||{};DATA[dk]={...d,note:t.value};persist();
   } else if(t.hasAttribute("data-w")){
-    const dk=t.getAttribute("data-dk"),id=t.getAttribute("data-w"),key=t.getAttribute("data-wkey"),val=t.value;
-    const d=DATA[dk]||{};const w={...(d.w||{})};w[id]=val;DATA[dk]={...d,w};
-    DATA.weights=DATA.weights||{}; if(val!=="") DATA.weights[key]=val; else delete DATA.weights[key];
+    const dk=t.getAttribute("data-dk"),id=t.getAttribute("data-w"),key=t.getAttribute("data-wkey"),si=+t.getAttribute("data-set"),val=t.value;
+    const d=DATA[dk]||{};const w={...(d.w||{})};
+    let arr=Array.isArray(w[id])?w[id].slice():(w[id]!=null?[w[id]]:[]);
+    arr[si]=val; w[id]=arr; DATA[dk]={...d,w};
+    DATA.weights=DATA.weights||{}; DATA.weights[key]=arr.slice();
     persist();
     t.style.borderColor = val ? C.purple : C.border;
   }
