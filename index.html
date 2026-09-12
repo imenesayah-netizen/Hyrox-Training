@@ -290,6 +290,19 @@ const LS="hyrox-solo-v1";
 let DATA; try{DATA=JSON.parse(store.get(LS))||{}}catch(e){DATA={}}
 function persist(){store.set(LS,JSON.stringify(DATA));}
 const S={view:"train",week:1,day:0,fuel:"daily"};
+// next session = earliest incomplete required day (skips rest + optional)
+function firstIncomplete(){
+  for(let w=1;w<=11;w++){ const days=getDays(w);
+    for(let i=0;i<days.length;i++){ const d=days[i]; if(!d.rest&&!d.optional&&!((DATA[`w${w}d${i}`]||{}).completed)) return {w,i}; } }
+  return null;
+}
+function nextAfter(cw,ci){
+  const order=[]; for(let w=1;w<=11;w++) for(let i=0;i<7;i++) order.push([w,i]);
+  const start=order.findIndex(o=>o[0]===cw&&o[1]===ci)+1;
+  for(let k=0;k<order.length;k++){ const [w,i]=order[(start+k)%order.length]; const d=getDays(w)[i];
+    if(!d.rest&&!d.optional&&!((DATA[`w${w}d${i}`]||{}).completed)) return {w,i}; }
+  return null;
+}
 
 const dtr=()=>Math.max(0,Math.ceil((RACE_DATE-new Date())/86400000));
 const START=new Date("2026-09-01T00:00:00");
@@ -304,6 +317,28 @@ const e=s=>(s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").rep
 function bar(v,c){return `<div style="height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden"><div style="height:100%;width:${v}%;background:${c};border-radius:2px"></div></div>`;}
 
 // ── Day card ──
+// swap indoor-only work (equipment circuits, floor core, burpees) for run-based alternatives
+function outdoorize(secs){
+  const badRx=/hollow|plank|dead ?bug|hanging|burpee|sit-?up|crunch|v-?up/i;
+  const kitRx=/wall ball|kb|kettlebell|ski|\brow\b|sled|burpee/i;
+  return secs.map((sec,si)=>{
+    if(sec.fin){
+      const txt=(sec.lbl+" "+sec.cs.map(c=>c.n).join(" "));
+      if(kitRx.test(txt)) return {lbl:"Outdoor swap — race-pace surges",exs:[
+        {id:"out"+si+"a",ic:"💨",n:"Race-pace surges",s:"5×30s",note:"Easy jog 60s between · same 'lift on tired legs' skill, no kit"}]};
+      return sec;
+    }
+    if((sec.exs||[]).some(x=>badRx.test(x.n))){
+      // keep the non-floor exercises, replace the floor/burpee ones with standing work
+      const kept=sec.exs.filter(x=>!badRx.test(x.n));
+      kept.push({id:"out"+si+"c",ic:"🦵",n:"Walking lunges",s:"2×20",note:"Standing — replaces floor core"});
+      kept.push({id:"out"+si+"d",ic:"🦵",n:"Calf raises (curb)",s:"3×15",note:"Standing"});
+      return {lbl:sec.lbl+" · outdoor",exs:kept};
+    }
+    return sec;
+  });
+}
+
 function dayCard(day,dk){
   const dd=DATA[dk]||{};
   if(day.rest){
@@ -323,7 +358,17 @@ function dayCard(day,dk){
     <div style="margin-bottom:12px">${bar(day.int,day.c)}</div>`;
   if(day.calNote) h+=`<div style="background:rgba(71,200,255,.05);border:1px solid rgba(71,200,255,.14);border-radius:8px;padding:7px 10px;margin-bottom:12px;font-size:11px;color:${C.blue};line-height:1.5">🍽️ ~${day.kcal.toLocaleString()} kcal · ${e(day.calNote)}</div>`;
 
-  day.secs.forEach((sec,si)=>{
+  const isRun = day.tag==="cond";
+  const env = isRun ? ((dd.env)||"indoor") : "indoor";
+  if(isRun){
+    h+=`<div style="display:flex;gap:4px;background:${C.surface};border:1px solid ${C.border};border-radius:10px;padding:4px;margin-bottom:12px">
+      ${[["indoor","🏠 Indoor"],["outdoor","🌳 Outdoor"]].map(([v,l])=>`<div data-act="env" data-v="${v}" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;background:${env===v?C.blue:"transparent"};color:${env===v?"#0a0a0f":C.muted};font-family:${F.mono};font-size:11px;font-weight:${env===v?700:400};cursor:pointer">${l}</div>`).join("")}
+    </div>`;
+    if(env==="outdoor") h+=`<div style="font-family:${F.mono};font-size:10px;color:${C.green};margin:-4px 0 12px 2px">No kit, no floor work — running does the job</div>`;
+  }
+  const secs = (isRun && env==="outdoor") ? outdoorize(day.secs) : day.secs;
+
+  secs.forEach((sec,si)=>{
     if(sec.fin){
       const rounds=(dd.fins||{})[si]||[];
       const n=parseInt((sec.rounds||"").match(/(\d+)/)?.[1]||"1");
@@ -499,7 +544,46 @@ function progress(){
   const pct=Math.round(done/total*100);
   return `<div class="fade"><div style="font-family:${F.disp};font-size:30px;letter-spacing:.03em;color:${C.text}">PROGRESS</div>
     <div style="font-family:${F.mono};font-size:10px;color:${C.muted};margin-bottom:14px">${done} of ${total} sessions · 🏁 ${dtr()} days to race</div>
-    <div style="background:${C.card};border:1px solid ${C.border};border-radius:11px;padding:14px;margin-bottom:16px;text-align:center"><div style="font-family:${F.disp};font-size:44px;color:${C.lime};line-height:1">${pct}%</div><div style="margin:8px 0">${bar(pct,C.lime)}</div><div style="font-family:${F.mono};font-size:10px;color:${C.muted}">programme complete</div></div>${rows}</div>`;
+    <div style="background:${C.card};border:1px solid ${C.border};border-radius:11px;padding:14px;margin-bottom:16px;text-align:center"><div style="font-family:${F.disp};font-size:44px;color:${C.lime};line-height:1">${pct}%</div><div style="margin:8px 0">${bar(pct,C.lime)}</div><div style="font-family:${F.mono};font-size:10px;color:${C.muted}">programme complete</div></div>${rows}
+    <div style="background:${C.surface};border:1px solid rgba(71,200,255,.25);border-radius:12px;padding:14px;margin-top:18px">
+      <div style="font-family:${F.mono};font-size:9px;color:${C.blue};letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px">Backup & Restore</div>
+      <div style="font-size:11.5px;color:${C.muted};line-height:1.55;margin-bottom:11px">Your logs live only on this device. Export a copy before any update or phone change — then Import to bring it back.</div>
+      <div style="display:flex;gap:8px">
+        <button data-act="export" style="flex:1;padding:11px;border-radius:9px;border:1px solid ${C.blue};background:${C.blue};color:#0a0a0f;font-family:${F.disp};font-size:15px;letter-spacing:.05em;cursor:pointer">⬇ EXPORT</button>
+        <button data-act="import" style="flex:1;padding:11px;border-radius:9px;border:1px solid ${C.border};background:transparent;color:${C.text};font-family:${F.disp};font-size:15px;letter-spacing:.05em;cursor:pointer">⬆ IMPORT</button>
+      </div>
+    </div>
+    </div>`;
+}
+
+function modal(inner){
+  const old=document.getElementById("modal"); if(old) old.remove();
+  const w=document.createElement("div"); w.id="modal";
+  w.style.cssText="position:fixed;inset:0;z-index:120;background:rgba(8,8,12,.86);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;animation:ovin .2s ease";
+  const c=document.createElement("div");
+  c.style.cssText=`width:340px;max-width:100%;background:linear-gradient(180deg,#16161f,#101017);border:1px solid ${C.border};border-radius:18px;padding:18px`;
+  c.innerHTML=inner; w.appendChild(c);
+  w.addEventListener("click",ev=>{ if(ev.target===w||(ev.target.hasAttribute&&ev.target.hasAttribute("data-close"))){ w.remove(); } });
+  document.body.appendChild(w); return w;
+}
+function showExport(){
+  const json=JSON.stringify(DATA);
+  modal(`<div style="font-family:${F.disp};font-size:22px;color:${C.text};letter-spacing:.03em;margin-bottom:4px">BACKUP YOUR LOGS</div>
+    <div style="font-size:11.5px;color:${C.muted};line-height:1.5;margin-bottom:10px">Copy this and paste it somewhere safe (Notes, email to yourself), or download the file. Keep it to restore later.</div>
+    <textarea id="expbox" readonly style="width:100%;height:120px;background:${C.bg};border:1px solid ${C.border};border-radius:9px;padding:9px;color:${C.text};font-family:${F.mono};font-size:10px;resize:none;outline:none;box-sizing:border-box">${e(json)}</textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button data-act="docopy" style="flex:1;padding:11px;border-radius:9px;border:none;background:${C.lime};color:#0a0a0f;font-family:${F.disp};font-size:15px;letter-spacing:.05em;cursor:pointer">COPY</button>
+      <button data-act="dodownload" style="flex:1;padding:11px;border-radius:9px;border:1px solid ${C.blue};background:transparent;color:${C.blue};font-family:${F.disp};font-size:15px;letter-spacing:.05em;cursor:pointer">DOWNLOAD</button>
+    </div>
+    <button data-close style="width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1px solid ${C.border};background:transparent;color:${C.muted};font-family:${F.mono};font-size:11px;cursor:pointer">Close</button>`);
+}
+function showImport(){
+  modal(`<div style="font-family:${F.disp};font-size:22px;color:${C.text};letter-spacing:.03em;margin-bottom:4px">RESTORE LOGS</div>
+    <div style="font-size:11.5px;color:${C.muted};line-height:1.5;margin-bottom:10px">Paste a backup below and tap Restore. It merges into this device — existing entries with the same day are overwritten, everything else is kept.</div>
+    <textarea id="impbox" placeholder="Paste your backup text here…" style="width:100%;height:120px;background:${C.bg};border:1px solid ${C.border};border-radius:9px;padding:9px;color:${C.text};font-family:${F.mono};font-size:10px;resize:none;outline:none;box-sizing:border-box"></textarea>
+    <div id="impmsg" style="font-family:${F.mono};font-size:10px;color:${C.orange};margin-top:6px;min-height:12px"></div>
+    <button data-act="dorestore" style="width:100%;margin-top:6px;padding:11px;border-radius:9px;border:none;background:${C.green};color:#0a0a0f;font-family:${F.disp};font-size:15px;letter-spacing:.05em;cursor:pointer">RESTORE</button>
+    <button data-close style="width:100%;margin-top:8px;padding:9px;border-radius:9px;border:1px solid ${C.border};background:transparent;color:${C.muted};font-family:${F.mono};font-size:11px;cursor:pointer">Close</button>`);
 }
 
 // ── Shell + render ──
@@ -576,11 +660,38 @@ document.addEventListener("click",ev=>{
   else if(a==="fuel"){S.fuel=v;render();}
   else if(a==="week"){S.week=+v;S.day=0;render();}
   else if(a==="phase"){S.week=[1,5,9][+v-1];S.day=0;render();}
+  else if(a==="env"){const d=DATA[dk]||{};DATA[dk]={...d,env:v};persist();render();}
+  else if(a==="export"){showExport();}
+  else if(a==="import"){showImport();}
+  else if(a==="docopy"){
+    const box=document.getElementById("expbox"); if(!box) return; box.select();
+    const done=()=>{t.textContent="✓ COPIED";setTimeout(()=>{t.textContent="COPY";},1500);};
+    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(box.value).then(done).catch(()=>{try{document.execCommand("copy");done();}catch(_){}}); }
+    else { try{document.execCommand("copy");done();}catch(_){} }
+  }
+  else if(a==="dodownload"){
+    try{ const blob=new Blob([JSON.stringify(DATA)],{type:"application/json"});
+      const url=URL.createObjectURL(blob); const el=document.createElement("a");
+      el.href=url; el.download="hyrox-solo-backup-"+new Date().toISOString().slice(0,10)+".json";
+      document.body.appendChild(el); el.click(); el.remove(); setTimeout(()=>URL.revokeObjectURL(url),2000);
+      t.textContent="✓ SAVED"; setTimeout(()=>{t.textContent="DOWNLOAD";},1500);
+    }catch(_){ t.textContent="USE COPY"; }
+  }
+  else if(a==="dorestore"){
+    const box=document.getElementById("impbox"),msg=document.getElementById("impmsg");
+    if(!box) return; let obj;
+    try{ obj=JSON.parse(box.value); }catch(_){ if(msg)msg.textContent="Couldn't read that — check you pasted the whole backup."; return; }
+    if(!obj||typeof obj!=="object"||Array.isArray(obj)){ if(msg)msg.textContent="That doesn't look like a valid backup."; return; }
+    Object.keys(obj).forEach(k=>{ DATA[k]=obj[k]; }); persist();
+    const m=document.getElementById("modal"); if(m) m.remove(); render();
+  }
   else if(a==="day"){S.day=+v;render();}
   else if(a==="jump"){S.week=+t.getAttribute("data-w");S.day=+t.getAttribute("data-d");S.view="train";render();}
   else if(a==="ex"){ if(ev.target.closest("[data-noex]")) return; const id=t.getAttribute("data-id");const d=DATA[dk]||{};const done={...(d.done||{})};done[id]=!done[id];DATA[dk]={...d,done};persist();render(); }
   else if(a==="round"){ const si=+t.getAttribute("data-si"),ri=+t.getAttribute("data-ri");const d=DATA[dk]||{};const fins={...(d.fins||{})};const arr=[...(fins[si]||[])];arr[ri]=!arr[ri];fins[si]=arr;DATA[dk]={...d,fins};persist();render(); }
-  else if(a==="complete"){ const d=DATA[dk]||{};const now=!d.completed;DATA[dk]={...d,completed:now,completedAt:now?new Date().toISOString():null};persist();render(); if(now) celebrate(tierFor(S.week,S.day)); }
+  else if(a==="complete"){ const d=DATA[dk]||{};const now=!d.completed;DATA[dk]={...d,completed:now,completedAt:now?new Date().toISOString():null};persist();
+    if(now){ const tier=tierFor(S.week,S.day); const nx=nextAfter(S.week,S.day); if(nx){S.week=nx.w;S.day=nx.i;} render(); celebrate(tier); }
+    else { render(); } }
   else if(a==="bodysave"){
     const root=document.getElementById("root");const g=k=>{const el=root.querySelector(`[data-bf="${k}"]`);return el?el.value:"";};
     if(!g("weight")) return;
@@ -606,6 +717,7 @@ document.addEventListener("input",ev=>{
   }
 });
 
+{ const f=firstIncomplete(); if(f){ S.week=f.w; S.day=f.i; } }
 render();
 
 }catch(e){var d=document.getElementById("err");if(d){d.style.display="block";d.textContent="Error:\n"+(e&&e.stack?e.stack:e);}}
